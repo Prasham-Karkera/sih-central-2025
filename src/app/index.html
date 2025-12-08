@@ -51,6 +51,7 @@
     <script src="assets/js/three.min.js"></script>
     <script src="assets/js/vis-network.min.js"></script>
     <script src="assets/js/socket.io.min.js"></script>
+    <script src="assets/js/analytics_component.js"></script>
 
     <style>
         /* Base Styles */
@@ -317,8 +318,8 @@
 
                 <div class="hidden md:flex items-center gap-4 text-xs font-mono opacity-60">
                     <span class="flex items-center gap-2 border-r border-current/20 pr-4">
-                        <i class="fab fa-linux text-lg"></i>
-                        <span data-i18n="host_linux">HOST: LINUX</span>
+                        <i class="{{ os_icon }} text-lg"></i>
+                        <span>{{ os_name }}</span>
                     </span>
                     <span id="clock">00:00:00 IST</span>
                     <span>•</span>
@@ -534,6 +535,20 @@
                                     </table>
                                 </div>
                             </div>
+
+                            <!-- Event Velocity Widget -->
+                            <div id="widget-event-velocity" draggable="true"
+                                class="panel p-6 rounded-lg draggable-widget">
+                                <div class="widget-remove-btn" onclick="removeWidget('widget-event-velocity')"><i
+                                        class="fas fa-times"></i></div>
+                                <div class="flex justify-between items-center mb-4">
+                                    <h3 class="font-display font-bold text-lg">Event Velocity</h3>
+                                    <span class="text-xs font-mono text-green-500 animate-pulse">LIVE</span>
+                                </div>
+                                <div class="h-64 w-full relative">
+                                    <canvas id="velocityChart"></canvas>
+                                </div>
+                            </div>
                         </div>
 
                         <!-- Right Column: Logs & Discovery -->
@@ -585,8 +600,7 @@
                             <div id="widget-chart-mitre" draggable="true" class="panel p-6 rounded-lg draggable-widget">
                                 <div class="widget-remove-btn" onclick="removeWidget('widget-chart-mitre')"><i
                                         class="fas fa-times"></i></div>
-                                <h3 class="font-display font-bold text-lg mb-4" data-i18n="chart_mitre">MITRE ATT&CK
-                                </h3>
+                                <h3 class="font-display font-bold text-lg mb-4">Threat Attack</h3>
                                 <div class="h-48 w-full flex justify-center">
                                     <canvas id="mitreChart"></canvas>
                                 </div>
@@ -850,7 +864,7 @@
                     <div class="w-1/3 panel p-4 rounded-lg flex flex-col gap-4">
                         <div class="flex justify-between items-center">
                             <h3 class="font-display font-bold text-lg">Rule Browser</h3>
-                            <button onclick="openNewRuleModal()"
+                            <button onclick="openNewRuleModal()" id="btn-new-sigma-rule"
                                 class="text-xs bg-white/10 hover:bg-white/20 px-2 py-1 rounded transition">
                                 <i class="fas fa-plus"></i> New
                             </button>
@@ -945,7 +959,7 @@
 
         </div> <!-- End Main Container -->
 
-        <!-- Floating Chatbot -->
+        <!-- Floating Chatbot
         <div class="fixed bottom-8 right-8 z-50">
             <button onclick="toggleChat()"
                 class="w-14 h-14 bg-black dark:bg-white text-white dark:text-black rounded-full shadow-lg flex items-center justify-center text-xl hover:scale-105 transition-transform">
@@ -955,8 +969,8 @@
             <div id="chat-window"
                 class="hidden absolute bottom-16 right-0 w-80 h-96 panel rounded-lg shadow-2xl flex flex-col overflow-hidden transition-all duration-300 origin-bottom-right">
 
-                <!-- Chat Background 3D -->
-                <div id="chat-bg-canvas" class="absolute inset-0 z-0 pointer-events-none opacity-20"></div>
+              Chat Background 3D 
+                <!-- <div id="chat-bg-canvas" class="absolute inset-0 z-0 pointer-events-none opacity-20"></div>
 
                 <div
                     class="p-4 border-b border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 flex justify-between items-center shrink-0 relative z-10">
@@ -994,7 +1008,7 @@
                     </form>
                 </div>
             </div>
-        </div>
+        </div> -->
         <!-- End App Content Wrapper -->
 
         <!-- Widget Library Modal -->
@@ -1902,35 +1916,79 @@
                 }, 2000);
                 */
 
-                // MITRE ATT&CK Chart
+                // Threat Attack Chart (Pie)
                 const ctxMitre = document.getElementById('mitreChart').getContext('2d');
-                const mitreChart = new Chart(ctxMitre, {
-                    type: 'doughnut',
-                    data: {
-                        labels: ['Password Guessing', 'SSH', 'Brute Force', 'Valid Accounts', 'System Binary Proxy', 'Account Access Removal'],
-                        datasets: [{
-                            data: [25, 15, 10, 20, 15, 15],
-                            backgroundColor: [
-                                '#3b82f6', // Blue
-                                '#60a5fa', // Light Blue
-                                '#facc15', // Yellow
-                                '#2dd4bf', // Teal
-                                '#4ade80', // Green
-                                '#c084fc'  // Purple
-                            ],
-                            borderWidth: 0,
-                            hoverOffset: 5
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        cutout: '65%',
-                        plugins: {
-                            legend: { position: 'right', labels: { usePointStyle: true, boxWidth: 6, font: { size: 10 } } }
-                        }
-                    }
-                });
+
+                // Fetch data first
+                fetch('/api/dashboard/top-threats?limit=50')
+                    .then(response => response.json())
+                    .then(data => {
+                        const threats = data.threats || [];
+
+                        const labels = threats.map(t => t.title);
+                        const counts = threats.map(t => t.count);
+
+                        // Generate colors dynamically or use a palette
+                        const palette = [
+                            '#3b82f6', '#ef4444', '#eab308', '#22c55e', '#a855f7', '#f97316',
+                            '#06b6d4', '#ec4899', '#6366f1', '#14b8a6'
+                        ];
+                        const bgColors = labels.map((_, i) => palette[i % palette.length]);
+
+                        const mitreChart = new Chart(ctxMitre, {
+                            type: 'pie',
+                            data: {
+                                labels: labels,
+                                datasets: [{
+                                    data: counts,
+                                    backgroundColor: bgColors,
+                                    borderWidth: 0,
+                                    hoverOffset: 5
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                plugins: {
+                                    legend: {
+                                        position: 'right',
+                                        labels: {
+                                            usePointStyle: true,
+                                            boxWidth: 8,
+                                            color: document.documentElement.classList.contains('dark') ? '#ffffff' : '#000000', // Explicit color
+                                            font: { size: 11 },
+                                            generateLabels: (chart) => {
+                                                const data = chart.data;
+                                                if (data.labels.length && data.datasets.length) {
+                                                    return data.labels.map((label, i) => {
+                                                        const value = data.datasets[0].data[i];
+                                                        return {
+                                                            text: `${label} (${value})`,
+                                                            fillStyle: data.datasets[0].backgroundColor[i],
+                                                            hidden: isNaN(data.datasets[0].data[i]) || chart.getDatasetMeta(0).data[i].hidden,
+                                                            index: i,
+                                                            fontColor: document.documentElement.classList.contains('dark') ? '#ffffff' : '#000000' // Ensure text color
+                                                        };
+                                                    });
+                                                }
+                                                return [];
+                                            }
+                                        }
+                                    },
+                                    tooltip: {
+                                        callbacks: {
+                                            label: function (context) {
+                                                return `${context.label}: ${context.raw}`;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        });
+                    })
+                    .catch(err => {
+                        console.error("Failed to load threat data", err);
+                    });
 
                 // Update charts on theme toggle
                 window.updateChartsTheme = () => {
@@ -2120,6 +2178,7 @@
                 initCharts();
                 initWebSocket();
                 loadSavedPlugins();
+                initVelocityChart();
 
                 updateClock();
 
@@ -2353,6 +2412,9 @@
                     loadSavedPlugins();
                 } else if (viewId === 'dashboard') {
                     fetchDashboardData();
+                    if (!velocityChartInstance) {
+                        setTimeout(initVelocityChart, 100); // Small delay to ensure DOM is ready
+                    }
                 } else if (viewId === 'sigma') {
                     initSigmaEditor();
                 }
@@ -2616,7 +2678,13 @@
             }
 
             function viewAnalytics(serverId) {
-                showToast(`Viewing analytics for server ${serverId}`, 'info');
+                // showToast(`Viewing analytics for server ${serverId}`, 'info');
+                if (window.analyticsComponent) {
+                    window.analyticsComponent.open(serverId);
+                } else {
+                    console.error('Analytics component not loaded');
+                    showToast('Analytics component not loaded', 'warning');
+                }
             }
 
             // Update search listener for full logs
@@ -2716,6 +2784,104 @@
                 selectedWidgetsToRestore.clear();
                 toggleWidgetLibrary();
                 saveLayout();
+            }
+
+            // --- Event Velocity Chart ---
+            let velocityChartInstance = null;
+            function initVelocityChart() {
+                const ctx = document.getElementById('velocityChart').getContext('2d');
+
+                // Gradients
+                const gradientBlue = ctx.createLinearGradient(0, 0, 0, 400);
+                gradientBlue.addColorStop(0, 'rgba(59, 130, 246, 0.5)');
+                gradientBlue.addColorStop(1, 'rgba(59, 130, 246, 0)');
+
+                const gradientPurple = ctx.createLinearGradient(0, 0, 0, 400);
+                gradientPurple.addColorStop(0, 'rgba(168, 85, 247, 0.5)');
+                gradientPurple.addColorStop(1, 'rgba(168, 85, 247, 0)');
+
+                const gradientCyan = ctx.createLinearGradient(0, 0, 0, 400);
+                gradientCyan.addColorStop(0, 'rgba(45, 212, 191, 0.5)');
+                gradientCyan.addColorStop(1, 'rgba(45, 212, 191, 0)');
+
+                // Initial Data
+                const generateData = () => Array(20).fill(0).map(() => Math.floor(Math.random() * 40) + 10);
+                const labels = Array(20).fill('');
+
+                velocityChartInstance = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [
+                            {
+                                label: 'Inbound Traffic',
+                                data: generateData(),
+                                borderColor: '#3b82f6', // Blue
+                                backgroundColor: gradientBlue,
+                                borderWidth: 2,
+                                fill: true,
+                                tension: 0.4,
+                                pointRadius: 0,
+                            },
+                            {
+                                label: 'Outbound Traffic',
+                                data: generateData(),
+                                borderColor: '#a855f7', // Purple
+                                backgroundColor: gradientPurple,
+                                borderWidth: 2,
+                                fill: true,
+                                tension: 0.4,
+                                pointRadius: 0,
+                            },
+                            {
+                                label: 'Internal Traffic',
+                                data: generateData(),
+                                borderColor: '#2dd4bf', // Cyan
+                                backgroundColor: gradientCyan,
+                                borderWidth: 2,
+                                fill: true,
+                                tension: 0.4,
+                                pointRadius: 0,
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        animation: {
+                            duration: 0
+                        },
+                        scales: {
+                            x: { display: false },
+                            y: {
+                                display: false,
+                                min: 0,
+                                max: 100
+                            }
+                        },
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: { enabled: false }
+                        }
+                    }
+                });
+
+                // Simulate continuous movement
+                setInterval(() => {
+                    // Remove first
+                    velocityChartInstance.data.labels.shift();
+                    velocityChartInstance.data.datasets.forEach(dataset => dataset.data.shift());
+
+                    // Add new
+                    velocityChartInstance.data.labels.push('');
+
+                    // Add slightly different random data for each layer
+                    velocityChartInstance.data.datasets[0].data.push(Math.floor(Math.random() * 40) + 20); // Blue (Inbound)
+                    velocityChartInstance.data.datasets[1].data.push(Math.floor(Math.random() * 30) + 15); // Purple (Outbound)
+                    velocityChartInstance.data.datasets[2].data.push(Math.floor(Math.random() * 50) + 10); // Cyan (Internal)
+
+                    velocityChartInstance.update('none');
+                }, 1000);
             }
 
             // --- WebSocket & USB Logic ---
@@ -3543,6 +3709,14 @@
 
             async function initSigmaEditor() {
                 const container = document.getElementById('sigma-tree-container');
+                const btnNew = document.getElementById('btn-new-sigma-rule');
+
+                if (currentUserRole === 'node_admin') {
+                    if (btnNew) btnNew.style.display = 'none';
+                } else {
+                    if (btnNew) btnNew.style.display = '';
+                }
+
                 container.innerHTML = '<div class="text-center opacity-40 text-xs py-4"><i class="fas fa-circle-notch fa-spin mr-2"></i> Loading rules...</div>';
 
                 try {
@@ -3631,10 +3805,11 @@
 
                         if (currentUserRole === 'node_admin') {
                             editor.disabled = true;
-                            btnSave.disabled = true;
+                            btnSave.style.display = 'none';
                             showToast('Read-only mode: Node Admin cannot edit rules', 'info');
                         } else {
                             editor.disabled = false;
+                            btnSave.style.display = '';
                             btnSave.disabled = false;
                         }
                     } else {
@@ -3663,7 +3838,10 @@
                 try {
                     const res = await fetch('/api/sigma/rule', {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'x-user-role': currentUserRole
+                        },
                         body: JSON.stringify({ path: currentSigmaPath, content: content })
                     });
 
@@ -3773,7 +3951,10 @@ level: medium`;
                 try {
                     const res = await fetch('/api/sigma/rule', {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'x-user-role': currentUserRole
+                        },
                         body: JSON.stringify({ path: fullPath, content: defaultContent })
                     });
 
@@ -3919,7 +4100,6 @@ level: medium`;
                 // Close menu after selection
                 document.getElementById('language-menu').classList.add('hidden');
             }
-
             // Close menus when clicking outside
             document.addEventListener('click', function (event) {
                 const langMenu = document.getElementById('language-menu');

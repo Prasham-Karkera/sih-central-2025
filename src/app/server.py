@@ -141,10 +141,30 @@ if ASSETS_DIR.exists():
 
 # === Routes ===
 # === Template Routes ===
+root_templates = Jinja2Templates(directory=str(Path(__file__).parent))
+
 @app.get("/", response_class=HTMLResponse)
 async def dashboard(request: Request):
     """Serve main dashboard."""
-    return FileResponse(Path(__file__).parent / "index.html")
+    import platform
+    os_name = platform.system()
+    
+    icon = "fa-question-circle"
+    display_name = f"HOST: {os_name.upper()}"
+    
+    if os_name == "Linux":
+        icon = "fab fa-linux"
+    elif os_name == "Windows":
+        icon = "fab fa-windows"
+    elif os_name == "Darwin":
+        icon = "fab fa-apple"
+        display_name = "HOST: MACOS"
+    
+    return root_templates.TemplateResponse("index.html", {
+        "request": request,
+        "os_name": display_name,
+        "os_icon": icon
+    })
 
 @app.get("/servers", response_class=HTMLResponse)
 async def servers_page(request: Request):

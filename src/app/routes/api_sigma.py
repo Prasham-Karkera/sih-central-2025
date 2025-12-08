@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Header
 from pydantic import BaseModel
 from pathlib import Path
 import os
@@ -91,8 +91,12 @@ async def get_sigma_tree():
     return build_tree(SIGMA_RULES_DIR)
 
 @router.post("/rule")
-async def save_rule_content(rule: RuleContent):
+async def save_rule_content(rule: RuleContent, x_user_role: str = Header(default="admin")):
     """Save content of a specific rule. Creates file if it doesn't exist."""
+    # Check permissions
+    if x_user_role == "node_admin":
+        raise HTTPException(status_code=403, detail="Node Admin cannot save rules")
+
     # Security check
     if ".." in rule.path or rule.path.startswith("/"):
         raise HTTPException(status_code=400, detail="Invalid path")
