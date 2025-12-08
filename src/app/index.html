@@ -2648,8 +2648,8 @@
                         <td class="p-3 text-right font-mono text-xs opacity-60 group-hover:opacity-100 transition-opacity">
                             ${server.stats?.total_logs || 0}
                         </td>
-                        <td class="p-3 text-right">
-                             <button onclick="viewAnalytics('${server.id}')" class="text-xs bg-blue-500/20 text-blue-500 hover:bg-blue-500/30 px-2 py-1 rounded transition">
+                <td class="p-3 text-right">
+                             <button onclick="viewAnalytics('${server.id}', '${server.hostname}', '${server.server_type}')" class="text-xs bg-blue-500/20 text-blue-500 hover:bg-blue-500/30 px-2 py-1 rounded transition">
                                 <i class="fas fa-chart-pie mr-1"></i> View
                             </button>
                         </td>
@@ -2677,10 +2677,10 @@
                 renderDevicesPage();
             }
 
-            function viewAnalytics(serverId) {
+            function viewAnalytics(serverId, hostname, serverType) {
                 // showToast(`Viewing analytics for server ${serverId}`, 'info');
                 if (window.analyticsComponent) {
-                    window.analyticsComponent.open(serverId);
+                    window.analyticsComponent.open(serverId, hostname, serverType);
                 } else {
                     console.error('Analytics component not loaded');
                     showToast('Analytics component not loaded', 'warning');

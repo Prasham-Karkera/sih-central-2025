@@ -5,7 +5,7 @@ Alert management and querying
 from fastapi import APIRouter, HTTPException, Query
 from typing import Dict, Any, List, Optional
 from datetime import datetime
-
+import json
 import sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
@@ -63,7 +63,7 @@ async def get_alerts(
                     "ip_address": server.ip_address
                 },
                 "log_source": log_entry.log_source,
-                "metadata": alert.alert_metadata
+                "metadata": json.loads(alert.alert_metadata) if alert.alert_metadata else None
             })
         
         return {
