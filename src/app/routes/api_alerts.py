@@ -7,6 +7,7 @@ from typing import Dict, Any, List, Optional
 from datetime import datetime
 import json
 import sys
+from cryptography.fernet import Fernet
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
 
@@ -170,3 +171,58 @@ async def get_alert_stats() -> Dict[str, Any]:
         }
     finally:
         db.close()
+
+
+@router.get("/export/encrypted")
+async def export_encrypted_alerts() -> Dict[str, Any]:
+    """Export all alerts encrypted."""
+    db = SessionLocal()
+    try:
+        # Fetch all alerts
+        alerts_query = db.query(Alert).all()
+        
+        alerts_data = []
+        for alert in alerts_query:
+            alerts_data.append({
+                "id": alert.id,
+                "title": alert.title,
+                "description": alert.description,
+                "severity": alert.severity,
+                "resolved": alert.resolved,
+                "triggered_at": alert.triggered_at.isoformat() if alert.triggered_at else None,
+                "metadata": alert.alert_metadata
+            })
+            
+        json_data = json.dumps(alerts_data)
+        
+        # Generate Key
+        key = Fernet.generate_key()
+        f = Fernet(key)
+        
+        # Encrypt
+        encrypted_data = f.encrypt(json_data.encode())
+        
+        return {
+            "key": key.decode(),
+            "encrypted_data": encrypted_data.decode()
+        }
+    finally:
+        db.close()
+
+
+from pydantic import BaseModel
+
+class DecryptRequest(BaseModel):
+    encrypted_data: str
+    key: str
+
+@router.post("/decrypt")
+async def decrypt_alerts(request: DecryptRequest) -> Dict[str, Any]:
+    """Decrypt alerts data."""
+    try:
+        f = Fernet(request.key.encode())
+        decrypted_data = f.decrypt(request.encrypted_data.encode())
+        alerts = json.loads(decrypted_data.decode())
+        return {"success": True, "alerts": alerts}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Decryption failed: {str(e)}")

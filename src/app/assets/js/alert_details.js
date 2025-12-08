@@ -171,6 +171,49 @@ class AlertDetailsManager {
         if (this.currentPage < 0) this.currentPage = 0;
         this.fetchAlerts();
     }
+
+    async exportEncrypted() {
+        try {
+            const btn = document.querySelector('button[onclick="alertDetailsManager.exportEncrypted()"]');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Encrypting...';
+            btn.disabled = true;
+
+            const res = await fetch('/api/alerts/export/encrypted');
+            if (res.ok) {
+                const data = await res.json();
+
+                // Download Encrypted File
+                const blob = new Blob([data.encrypted_data], { type: 'application/octet-stream' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `alerts_encrypted_${new Date().toISOString().slice(0, 10)}.bin`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                a.remove();
+
+                // Show Key in a prompt/alert so user can copy it
+                // Ideally, we'd use a nice modal, but for now a prompt is functional
+                prompt("Encryption Key (Copy and save this securely!):", data.key);
+
+            } else {
+                alert('Failed to export encrypted alerts');
+            }
+
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        } catch (e) {
+            console.error(e);
+            alert('Error exporting alerts');
+            const btn = document.querySelector('button[onclick="alertDetailsManager.exportEncrypted()"]');
+            if (btn) {
+                btn.innerHTML = '<i class="fas fa-lock"></i> Export Encrypted';
+                btn.disabled = false;
+            }
+        }
+    }
 }
 
 const alertDetailsManager = new AlertDetailsManager();
