@@ -4,7 +4,7 @@ Log querying and search
 """
 from fastapi import APIRouter, HTTPException, Query
 from typing import Dict, Any, List, Optional
-
+import json
 import sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
@@ -41,17 +41,32 @@ async def get_logs(
         
         logs = []
         for log_entry, server in results:
-            logs.append({
-                "id": log_entry.id,
-                "source": log_entry.log_source,
-                "content": log_entry.content[:200] + "..." if len(log_entry.content) > 200 else log_entry.content,
-                "recv_time": log_entry.recv_time.isoformat() if log_entry.recv_time else None,
-                "server": {
-                    "id": server.id,
-                    "hostname": server.hostname,
-                    "ip_address": server.ip_address
-                }
-            })
+            print(log_entry.log_source)
+            if log_entry.log_source == 'linux':
+                logs.append({
+                    "id": log_entry.id,
+                    "source": log_entry.log_source,
+                    "content": log_entry.content,
+                    "recv_time": log_entry.recv_time.isoformat() if log_entry.recv_time else None,
+                    "server": {
+                        "id": server.id,
+                        "hostname": server.hostname,
+                        "ip_address": server.ip_address
+                    }
+                    
+                })
+            else:
+                logs.append({
+                    "id": log_entry.id,
+                    "source": log_entry.log_source,
+                    "content": json.loads(log_entry.content) if log_entry.content else log_entry.content,
+                    "recv_time": log_entry.recv_time.isoformat() if log_entry.recv_time else None,
+                    "server": {
+                        "id": server.id,
+                        "hostname": server.hostname,
+                        "ip_address": server.ip_address
+                    }
+                })
         
         return {
             "logs": logs,

@@ -23,7 +23,9 @@ from src.db.models import Server, LogEntry, Alert
 from fastapi.templating import Jinja2Templates
 
 # Import API routes
+# Import API routes
 from src.app.routes import api_dashboard, api_alerts, api_logs, api_servers, api_sigma, api_tasks
+from src.app.plugins.usb_monitor import USBDeviceMonitorPlugin
 
 # === Configuration ===
 DB_PATH = "./ironchad_logs.db"
@@ -92,6 +94,7 @@ app.add_middleware(
 ws_manager: ConnectionManager = ConnectionManager()
 start_time: datetime = None
 templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
+usb_plugin = USBDeviceMonitorPlugin()
 
 # === Startup/Shutdown ===
 @app.on_event("startup")
@@ -108,12 +111,17 @@ async def startup_event():
     # Start all background tasks
     await api_tasks.start_all_workers()
     
+    # Start USB Monitor Plugin
+    loop = asyncio.get_running_loop()
+    usb_plugin.on_load(ws_manager, loop)
+    
     print("[Server] All systems ready. Access dashboard at http://localhost:8000")
 
 @app.on_event("shutdown")
 async def shutdown_event():
     # Stop all background tasks gracefully
     await api_tasks.stop_all_workers()
+    usb_plugin.on_unload()
     
     print("[Server] Shutdown complete")
 
@@ -596,6 +604,17 @@ async def websocket_live(websocket: WebSocket):
             await websocket.send_json({"type": "stats", "data": {"total_logs": total_logs}})
         finally:
             db.close()
+            
+        # Send initial USB devices
+        current_usb = usb_plugin.get_current_devices()
+        await websocket.send_json({
+            "type": "usb_update", 
+            "data": {
+                "devices": current_usb,
+                "added": [],
+                "removed": []
+            }
+        })
         
         # Keep connection alive
         while True:

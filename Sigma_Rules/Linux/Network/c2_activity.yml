@@ -20,4 +20,4 @@ detection:
   condition: selection
 falsepositives:
   - Security testing
-level: critical
+level: medium

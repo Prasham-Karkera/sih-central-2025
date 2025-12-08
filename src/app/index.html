@@ -380,7 +380,7 @@
                     <i class="fas fa-network-wired w-5 text-center"></i> <span data-i18n="nav_devices">Device
                         Discovery</span>
                 </button>
-                <!-- <button onclick="switchView('plugins')" id="nav-plugins"
+                <button onclick="switchView('plugins')" id="nav-plugins"
                     class="w-full text-left px-6 py-3 text-sm font-mono hover:bg-white/5 transition-colors flex items-center gap-3 border-l-2 border-transparent opacity-70 hover:opacity-100">
                     <i class="fas fa-plug w-5 text-center"></i> <span data-i18n="nav_plugins">Plugin System</span>
                 </button>
@@ -400,7 +400,7 @@
                     class="w-full text-left px-6 py-3 text-sm font-mono hover:bg-white/5 transition-colors flex items-center gap-3 border-l-2 border-transparent opacity-70 hover:opacity-100">
                     <i class="fas fa-cloud-upload-alt w-5 text-center"></i> <span data-i18n="nav_upload">Upload
                         Log</span>
-                </button> -->
+                </button>
             </div>
         </aside>
 
@@ -681,7 +681,7 @@
                 <div class="grid grid-cols-1 gap-6">
                     <div class="panel p-6 rounded-lg">
                         <div class="flex justify-between items-center mb-4">
-                            <h3 class="font-bold" data-i18n="subtitle_network">Network Devices (Servers)</h3>
+                            <h3 class="font-bold" data-i18n="subtitle_network">Server Devices </h3>
                             <button onclick="fetchDevices()" class="text-xs bg-white/10 px-2 py-1 rounded"
                                 data-i18n="btn_refresh">Refresh</button>
                         </div>
@@ -694,6 +694,7 @@
                                         <th class="p-3" data-i18n="th_type">Type</th>
                                         <th class="p-3 text-right" data-i18n="th_status">Status</th>
                                         <th class="p-3 text-right" data-i18n="th_logs">Logs</th>
+                                        <th class="p-3 text-right" data-i18n="th_analytics">Analytics</th>
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-white/5" id="network-devices-body">
@@ -719,79 +720,8 @@
                     </div>
                     <div class="panel p-6 rounded-lg h-96 flex flex-col">
                         <h3 class="font-bold mb-4" data-i18n="subtitle_usb">USB & Hardware</h3>
-                        <div class="overflow-y-auto flex-1 custom-scrollbar space-y-2">
-                            <!-- Item 1 -->
-                            <div
-                                class="flex items-center gap-3 p-3 rounded bg-white/5 border border-white/5 hover:bg-white/10 transition-colors group">
-                                <div
-                                    class="w-8 h-8 rounded flex items-center justify-center bg-blue-500/20 text-blue-500">
-                                    <i class="fab fa-usb text-lg"></i>
-                                </div>
-                                <div class="flex-1 min-w-0">
-                                    <div class="flex justify-between items-center">
-                                        <h4 class="text-xs font-bold truncate">SanDisk Ultra</h4>
-                                        <span class="text-[10px] font-mono opacity-50">USB 3.0</span>
-                                    </div>
-                                    <p class="text-[10px] opacity-60 truncate">/dev/sdb1 • Mounted</p>
-                                </div>
-                                <div class="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_5px_rgba(34,197,94,0.5)]">
-                                </div>
-                            </div>
-
-                            <!-- Item 2 -->
-                            <div
-                                class="flex items-center gap-3 p-3 rounded bg-white/5 border border-white/5 hover:bg-white/10 transition-colors group">
-                                <div
-                                    class="w-8 h-8 rounded flex items-center justify-center bg-purple-500/20 text-purple-500">
-                                    <i class="fas fa-hdd text-lg"></i>
-                                </div>
-                                <div class="flex-1 min-w-0">
-                                    <div class="flex justify-between items-center">
-                                        <h4 class="text-xs font-bold truncate">Seagate Expansion</h4>
-                                        <span class="text-[10px] font-mono opacity-50">2TB HDD</span>
-                                    </div>
-                                    <p class="text-[10px] opacity-60 truncate">/dev/sdc • Encrypted</p>
-                                </div>
-                                <div class="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_5px_rgba(34,197,94,0.5)]">
-                                </div>
-                            </div>
-
-                            <!-- Item 3 -->
-                            <div
-                                class="flex items-center gap-3 p-3 rounded bg-white/5 border border-white/5 hover:bg-white/10 transition-colors group">
-                                <div
-                                    class="w-8 h-8 rounded flex items-center justify-center bg-yellow-500/20 text-yellow-500">
-                                    <i class="fas fa-keyboard text-lg"></i>
-                                </div>
-                                <div class="flex-1 min-w-0">
-                                    <div class="flex justify-between items-center">
-                                        <h4 class="text-xs font-bold truncate">Razer BlackWidow</h4>
-                                        <span class="text-[10px] font-mono opacity-50">HID</span>
-                                    </div>
-                                    <p class="text-[10px] opacity-60 truncate">USB Input Device</p>
-                                </div>
-                                <div class="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_5px_rgba(34,197,94,0.5)]">
-                                </div>
-                            </div>
-
-                            <!-- Item 4 -->
-                            <div
-                                class="flex items-center gap-3 p-3 rounded bg-white/5 border border-white/5 hover:bg-white/10 transition-colors group">
-                                <div
-                                    class="w-8 h-8 rounded flex items-center justify-center bg-red-500/20 text-red-500">
-                                    <i class="fas fa-video text-lg"></i>
-                                </div>
-                                <div class="flex-1 min-w-0">
-                                    <div class="flex justify-between items-center">
-                                        <h4 class="text-xs font-bold truncate">Logitech C920</h4>
-                                        <span class="text-[10px] font-mono opacity-50">Webcam</span>
-                                    </div>
-                                    <p class="text-[10px] opacity-60 truncate">/dev/video0 • Active</p>
-                                </div>
-                                <div
-                                    class="w-2 h-2 rounded-full bg-red-500 animate-pulse shadow-[0_0_5px_rgba(239,68,68,0.5)]">
-                                </div>
-                            </div>
+                        <div id="usb-devices-list" class="overflow-y-auto flex-1 custom-scrollbar space-y-2">
+                            <div class="text-center opacity-40 text-xs py-4">Waiting for device data...</div>
                         </div>
                     </div>
                 </div>
@@ -1130,6 +1060,8 @@
             // --- Authentication & Secure Logs ---
             let SYSTEM_LOGS = [];
 
+            let currentUserRole = 'guest';
+
             // Logs will be fetched from server
             // generateLogs();
 
@@ -1140,23 +1072,12 @@
                 const overlay = document.getElementById('login-overlay');
                 const content = document.getElementById('app-content');
 
-                // Hardcoded demo password
-                if (password === 'admin' || password === '1234') {
-                    // Update Port
-                    try {
-                        await fetch(`/api/config/ingestion-port?port=${port}`, { method: 'POST' });
-                        showToast(`Ingestion Port set to ${port}`, 'info');
-                    } catch (err) {
-                        console.error("Failed to update port", err);
-                    }
-                    // Success
-                    overlay.classList.add('opacity-0', 'pointer-events-none');
-                    content.classList.remove('opacity-0', 'blur-xl', 'pointer-events-none');
-
-                    // Render Logs
-                    renderSecureLogs();
-
-                    showToast('Authentication Successful', 'success');
+                if (password === 'admin') {
+                    currentUserRole = 'admin';
+                    await performLogin(port, overlay, content);
+                } else if (password === 'nodeadmin') {
+                    currentUserRole = 'node_admin';
+                    await performLogin(port, overlay, content);
                 } else {
                     // Failure
                     showToast('Access Denied: Invalid Credentials');
@@ -1168,6 +1089,24 @@
                     panel.classList.add('animate-pulse'); // Simple shake replacement
                     setTimeout(() => panel.classList.remove('animate-pulse'), 500);
                 }
+            }
+
+            async function performLogin(port, overlay, content) {
+                // Update Port
+                try {
+                    await fetch(`/api/config/ingestion-port?port=${port}`, { method: 'POST' });
+                    showToast(`Ingestion Port set to ${port}`, 'info');
+                } catch (err) {
+                    console.error("Failed to update port", err);
+                }
+                // Success
+                overlay.classList.add('opacity-0', 'pointer-events-none');
+                content.classList.remove('opacity-0', 'blur-xl', 'pointer-events-none');
+
+                // Render Logs
+                renderSecureLogs();
+
+                showToast('Authentication Successful', 'success');
             }
 
             async function handleBiometricLogin() {
@@ -1306,13 +1245,22 @@
                     const logsRes = await fetch('/api/logs?limit=50');
                     if (logsRes.ok) {
                         const logsData = await logsRes.json();
-                        SYSTEM_LOGS = logsData.logs.map(log => ({
-                            time: new Date(log.recv_time).toISOString().replace('T', ' ').split('.')[0],
-                            timestamp: new Date(log.recv_time),
-                            level: log.log_source === 'suricata' ? 'CRIT' : 'INFO', // Simple mapping
-                            source: log.log_source,
-                            msg: log.raw_log
-                        }));
+                        SYSTEM_LOGS = logsData.logs.map(log => {
+                            let msg = '';
+                            if (typeof log.content === 'object' && log.content !== null) {
+                                msg = log.content.message || JSON.stringify(log.content);
+                            } else {
+                                msg = String(log.content || '');
+                            }
+
+                            return {
+                                time: new Date(log.recv_time).toISOString().replace('T', ' ').split('.')[0],
+                                timestamp: new Date(log.recv_time),
+                                level: log.log_source === 'suricata' ? 'CRIT' : 'INFO', // Simple mapping
+                                source: log.log_source,
+                                msg: msg
+                            };
+                        });
                         renderSecureLogs();
                     }
 
@@ -1327,7 +1275,7 @@
                 if (threatWidget) {
                     const valueEl = threatWidget.querySelector('.text-3xl');
                     const barEl = threatWidget.querySelector('.h-full');
-                    const level = data.threat_level || 'low';
+                    const level = 'medium';
 
                     if (valueEl) valueEl.innerText = level.charAt(0).toUpperCase() + level.slice(1);
 
@@ -2170,6 +2118,7 @@
             document.addEventListener('DOMContentLoaded', () => {
                 init3D();
                 initCharts();
+                initWebSocket();
                 loadSavedPlugins();
 
                 updateClock();
@@ -2484,25 +2433,69 @@
 
                 tbody.innerHTML = pageLogs.map(log => {
                     const time = new Date(log.recv_time).toLocaleString();
-                    // Highlight keywords for effect
-                    let content = log.content
-                        .replace(/error/gi, '<span class="text-red-400 font-bold">ERROR</span>')
-                        .replace(/failed/gi, '<span class="text-red-400 font-bold">FAILED</span>')
-                        .replace(/warning/gi, '<span class="text-yellow-400 font-bold">WARNING</span>');
+                    let contentHtml = '';
+
+                    if (typeof log.content === 'object' && log.content !== null) {
+                        // Structured Log (e.g. Windows)
+                        // Display specific fields: timestamp, level, channel, message
+                        const { timestamp, level, channel, message } = log.content;
+
+                        contentHtml = '<div class="space-y-1">';
+
+                        if (timestamp) {
+                            contentHtml += `
+                                <div class="flex gap-2 text-[10px]">
+                                    <span class="font-bold text-blue-400 min-w-[80px] shrink-0 uppercase tracking-wider opacity-70">Timestamp:</span>
+                                    <div class="flex-1 break-words opacity-80">${timestamp}</div>
+                                </div>`;
+                        }
+                        if (level) {
+                            contentHtml += `
+                                <div class="flex gap-2 text-[10px]">
+                                    <span class="font-bold text-blue-400 min-w-[80px] shrink-0 uppercase tracking-wider opacity-70">Level:</span>
+                                    <div class="flex-1 break-words opacity-80">${level}</div>
+                                </div>`;
+                        }
+                        if (channel) {
+                            contentHtml += `
+                                <div class="flex gap-2 text-[10px]">
+                                    <span class="font-bold text-blue-400 min-w-[80px] shrink-0 uppercase tracking-wider opacity-70">Channel:</span>
+                                    <div class="flex-1 break-words opacity-80">${channel}</div>
+                                </div>`;
+                        }
+                        if (message) {
+                            contentHtml += `
+                                <div class="flex gap-2 text-[10px]">
+                                    <span class="font-bold text-blue-400 min-w-[80px] shrink-0 uppercase tracking-wider opacity-70">Message:</span>
+                                    <div class="flex-1 break-words">
+                                        <pre class="whitespace-pre-wrap text-[10px] opacity-80 mt-1 pl-2 border-l border-white/10 font-mono">${message}</pre>
+                                    </div>
+                                </div>`;
+                        }
+
+                        contentHtml += '</div>';
+                    } else {
+                        // Unstructured Log (e.g. Linux/Syslog string)
+                        let text = String(log.content || '');
+                        contentHtml = text
+                            .replace(/error/gi, '<span class="text-red-400 font-bold">ERROR</span>')
+                            .replace(/failed/gi, '<span class="text-red-400 font-bold">FAILED</span>')
+                            .replace(/warning/gi, '<span class="text-yellow-400 font-bold">WARNING</span>');
+                    }
 
                     return `
-                        <tr class="table-row transition-colors group">
-                            <td class="p-4 border-b border-white/5 text-xs opacity-60">#${log.id}</td>
-                            <td class="p-4 border-b border-white/5">
+                        <tr class="table-row transition-colors group hover:bg-white/5">
+                            <td class="p-4 border-b border-white/5 text-xs opacity-60 align-top">#${log.id}</td>
+                            <td class="p-4 border-b border-white/5 align-top">
                                 <span class="px-2 py-1 rounded bg-white/5 text-[10px] font-bold uppercase tracking-wider ${log.source === 'linux' ? 'text-yellow-500' : 'text-blue-500'}">
                                     ${log.source}
                                 </span>
                             </td>
-                            <td class="p-4 border-b border-white/5 text-xs font-mono break-all max-w-xl">
-                                ${content}
+                            <td class="p-4 border-b border-white/5 text-xs font-mono break-all max-w-xl align-top">
+                                ${contentHtml}
                             </td>
-                            <td class="p-4 border-b border-white/5 text-xs opacity-60 whitespace-nowrap">${time}</td>
-                            <td class="p-4 border-b border-white/5 text-right">
+                            <td class="p-4 border-b border-white/5 text-xs opacity-60 whitespace-nowrap align-top">${time}</td>
+                            <td class="p-4 border-b border-white/5 text-right align-top">
                                 <div class="flex flex-col items-end">
                                     <span class="text-xs font-bold">${log.server.hostname}</span>
                                     <span class="text-[10px] opacity-50 font-mono">${log.server.ip_address}</span>
@@ -2593,6 +2586,11 @@
                         <td class="p-3 text-right font-mono text-xs opacity-60 group-hover:opacity-100 transition-opacity">
                             ${server.stats?.total_logs || 0}
                         </td>
+                        <td class="p-3 text-right">
+                             <button onclick="viewAnalytics('${server.id}')" class="text-xs bg-blue-500/20 text-blue-500 hover:bg-blue-500/30 px-2 py-1 rounded transition">
+                                <i class="fas fa-chart-pie mr-1"></i> View
+                            </button>
+                        </td>
                     `;
                     tbody.appendChild(tr);
                 });
@@ -2615,6 +2613,10 @@
                 if (currentDevicePage > maxPage) currentDevicePage = maxPage;
 
                 renderDevicesPage();
+            }
+
+            function viewAnalytics(serverId) {
+                showToast(`Viewing analytics for server ${serverId}`, 'info');
             }
 
             // Update search listener for full logs
@@ -2714,6 +2716,66 @@
                 selectedWidgetsToRestore.clear();
                 toggleWidgetLibrary();
                 saveLayout();
+            }
+
+            // --- WebSocket & USB Logic ---
+            function initWebSocket() {
+                const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+                const wsUrl = `${protocol}//${window.location.host}/ws/live`;
+                const ws = new WebSocket(wsUrl);
+
+                ws.onopen = () => {
+                    console.log('Connected to WebSocket');
+                };
+
+                ws.onmessage = (event) => {
+                    try {
+                        const msg = JSON.parse(event.data);
+                        if (msg.type === 'usb_update') {
+                            updateUSBDevices(msg.data.devices);
+                            if (msg.data.added && msg.data.added.length > 0) {
+                                showToast(`USB Device Connected: ${msg.data.added[0]}`, 'success');
+                            }
+                            if (msg.data.removed && msg.data.removed.length > 0) {
+                                showToast(`USB Device Removed: ${msg.data.removed[0]}`, 'warning');
+                            }
+                        }
+                    } catch (e) {
+                        console.error('WS Error:', e);
+                    }
+                };
+
+                ws.onclose = () => {
+                    console.log('WebSocket disconnected. Reconnecting in 5s...');
+                    setTimeout(initWebSocket, 5000);
+                };
+            }
+
+            function updateUSBDevices(devices) {
+                const container = document.getElementById('usb-devices-list');
+                if (!container) return;
+
+                if (!devices || devices.length === 0) {
+                    container.innerHTML = '<div class="text-center opacity-40 text-xs py-4">No USB devices detected</div>';
+                    return;
+                }
+
+                container.innerHTML = devices.map(device => {
+                    return `
+                    <div class="flex items-center gap-3 p-3 rounded bg-white/5 border border-white/5 hover:bg-white/10 transition-colors group">
+                        <div class="w-8 h-8 rounded flex items-center justify-center bg-blue-500/20 text-blue-500">
+                            <i class="fab fa-usb text-lg"></i>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex justify-between items-center">
+                                <h4 class="text-xs font-bold truncate" title="${device}">${device}</h4>
+                            </div>
+                            <p class="text-[10px] opacity-60 truncate">Connected</p>
+                        </div>
+                        <div class="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_5px_rgba(34,197,94,0.5)]"></div>
+                    </div>
+                    `;
+                }).join('');
             }
 
             function renderWidgetLibrary() {
@@ -3566,8 +3628,15 @@
                     if (res.ok) {
                         const data = await res.json();
                         editor.value = data.content;
-                        editor.disabled = false;
-                        btnSave.disabled = false;
+
+                        if (currentUserRole === 'node_admin') {
+                            editor.disabled = true;
+                            btnSave.disabled = true;
+                            showToast('Read-only mode: Node Admin cannot edit rules', 'info');
+                        } else {
+                            editor.disabled = false;
+                            btnSave.disabled = false;
+                        }
                     } else {
                         editor.value = 'Failed to load content.';
                     }
@@ -3578,6 +3647,10 @@
             }
 
             async function saveSigmaRule() {
+                if (currentUserRole === 'node_admin') {
+                    showToast('Permission Denied: Node Admin cannot save rules', 'error');
+                    return;
+                }
                 if (!currentSigmaPath) return;
 
                 const editor = document.getElementById('sigma-editor-content');
@@ -3638,6 +3711,10 @@
 
             // --- New Rule Creation ---
             function openNewRuleModal() {
+                if (currentUserRole === 'node_admin') {
+                    showToast('Permission Denied: Node Admin cannot create rules', 'error');
+                    return;
+                }
                 const modal = document.getElementById('new-rule-modal');
                 const select = document.getElementById('new-rule-folder');
 
@@ -3759,7 +3836,7 @@ level: medium`;
                     th_server: "Server",
                     title_devices: "Device Discovery",
                     subtitle_usb: "USB & Hardware",
-                    subtitle_network: "Network Devices (Servers)",
+                    subtitle_network: "Servers Devices",
                     btn_refresh: "Refresh",
                     th_hostname: "Hostname",
                     th_ip: "IP Address",
@@ -3854,5 +3931,7 @@ level: medium`;
             });
         </script>
 </body>
+
+</html>
 
 </html>

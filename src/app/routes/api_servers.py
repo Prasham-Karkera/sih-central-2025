@@ -5,7 +5,7 @@ Server information and stats with device discovery features
 from fastapi import APIRouter, HTTPException, Query
 from typing import Dict, Any, List, Optional
 from datetime import datetime, timedelta
-
+import json
 import sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
@@ -307,7 +307,7 @@ async def get_server_logs(
             log_list.append({
                 "id": log.id,
                 "source": log.log_source,
-                "content": log.content,
+                "content": json.loads(log.content) if log.content else log.content,
                 "recv_time": log.recv_time.isoformat() if log.recv_time else None
             })
         
