@@ -194,80 +194,247 @@ async def get_stats():
         db.close()
 
 @app.get("/api/servers")
-async def get_servers():
-    """Get all servers with dummy data for demonstration."""
+async def get_servers(
+    limit: int = Query(200, ge=1),
+    offset: int = Query(0, ge=0)
+):
+    """Get all servers with specific dummy data."""
     
-    # Generate realistic dummy data
-    dummy_servers = [
+    # Data provided by user
+    servers_data = [
         {
             "id": 1,
-            "hostname": "web-server-01",
+            "hostname": "test-server",
             "ip_address": "192.168.1.100",
-            "status": "online",
-            "log_count": 1523,
-            "alert_count": 3,
-            "last_log_time": datetime.now().isoformat(),
-            "first_seen": (datetime.now() - timedelta(days=30)).isoformat(),
-            "last_seen": datetime.now().isoformat()
+            "server_type": "linux",
+            "status": "offline",
+            "stats": {
+                "total_logs": 2,
+                "total_alerts": 2,
+                "active_alerts": 2,
+                "last_seen": "2025-12-06T05:59:48.579430"
+            }
         },
         {
             "id": 2,
-            "hostname": "dc-server-01",
-            "ip_address": "192.168.1.10",
-            "status": "online",
-            "log_count": 5087,
-            "alert_count": 12,
-            "last_log_time": datetime.now().isoformat(),
-            "first_seen": (datetime.now() - timedelta(days=60)).isoformat(),
-            "last_seen": datetime.now().isoformat()
+            "hostname": "webserver-01",
+            "ip_address": "192.168.1.100",
+            "server_type": "linux",
+            "status": "offline",
+            "stats": {
+                "total_logs": 1,
+                "total_alerts": 0,
+                "active_alerts": 0,
+                "last_seen": "2025-12-06T06:05:52.543277"
+            }
         },
         {
             "id": 3,
-            "hostname": "ubuntu-server-01",
-            "ip_address": "192.168.1.50",
-            "status": "online",
-            "log_count": 892,
-            "alert_count": 1,
-            "last_log_time": datetime.now().isoformat(),
-            "first_seen": (datetime.now() - timedelta(days=45)).isoformat(),
-            "last_seen": datetime.now().isoformat()
+            "hostname": "dc01",
+            "ip_address": "10.0.0.5",
+            "server_type": "windows",
+            "status": "offline",
+            "stats": {
+                "total_logs": 1,
+                "total_alerts": 0,
+                "active_alerts": 0,
+                "last_seen": "2025-12-06T06:05:52.563394"
+            }
         },
         {
             "id": 4,
-            "hostname": "app-server-02",
-            "ip_address": "192.168.1.110",
-            "status": "delayed",
-            "log_count": 2341,
-            "alert_count": 7,
-            "last_log_time": (datetime.now() - timedelta(minutes=15)).isoformat(),
-            "first_seen": (datetime.now() - timedelta(days=20)).isoformat(),
-            "last_seen": (datetime.now() - timedelta(minutes=15)).isoformat()
+            "hostname": "nginx-lb-01",
+            "ip_address": "10.0.0.10",
+            "server_type": "nginx",
+            "status": "offline",
+            "stats": {
+                "total_logs": 1,
+                "total_alerts": 0,
+                "active_alerts": 0,
+                "last_seen": "2025-12-06T06:05:52.579385"
+            }
         },
         {
             "id": 5,
-            "hostname": "win-workstation-03",
-            "ip_address": "192.168.1.45",
+            "hostname": "Hp-lap704",
+            "ip_address": "0.0.0.0",
+            "server_type": "unknown",
             "status": "offline",
-            "log_count": 156,
-            "alert_count": 0,
-            "last_log_time": (datetime.now() - timedelta(hours=2)).isoformat(),
-            "first_seen": (datetime.now() - timedelta(days=10)).isoformat(),
-            "last_seen": (datetime.now() - timedelta(hours=2)).isoformat()
+            "stats": {
+                "total_logs": 0,
+                "total_alerts": 0,
+                "active_alerts": 0,
+                "last_seen": None
+            }
         },
         {
             "id": 6,
-            "hostname": "db-server-01",
-            "ip_address": "192.168.1.20",
+            "hostname": "HP-LAP704",
+            "ip_address": "0.0.0.0",
+            "server_type": "unknown",
+            "status": "offline",
+            "stats": {
+                "total_logs": 0,
+                "total_alerts": 0,
+                "active_alerts": 0,
+                "last_seen": None
+            }
+        },
+        {
+            "id": 7,
+            "hostname": "HP-LAP704",
+            "ip_address": "192.168.0.102",
+            "server_type": "windows",
+            "status": "offline",
+            "stats": {
+                "total_logs": 81541,
+                "total_alerts": 8437,
+                "active_alerts": 8437,
+                "last_seen": "2025-12-06T20:40:33"
+            }
+        },
+        {
+            "id": 8,
+            "hostname": "192.168.1.100",
+            "ip_address": "127.0.0.1",
+            "server_type": "nginx",
+            "status": "offline",
+            "stats": {
+                "total_logs": 21,
+                "total_alerts": 19,
+                "active_alerts": 19,
+                "last_seen": "2025-12-06T10:00:09"
+            }
+        },
+        {
+            "id": 9,
+            "hostname": "WIN-SERVER",
+            "ip_address": "127.0.0.1",
+            "server_type": "windows",
+            "status": "offline",
+            "stats": {
+                "total_logs": 4,
+                "total_alerts": 2,
+                "active_alerts": 2,
+                "last_seen": "2025-12-06T10:00:02"
+            }
+        },
+        {
+            "id": 10,
+            "hostname": "linux-server",
+            "ip_address": "127.0.0.1",
+            "server_type": "linux",
+            "status": "offline",
+            "stats": {
+                "total_logs": 8,
+                "total_alerts": 6,
+                "active_alerts": 6,
+                "last_seen": "2025-12-06T07:10:13.758851"
+            }
+        },
+        {
+            "id": 11,
+            "hostname": "WIN-RDP",
+            "ip_address": "127.0.0.1",
+            "server_type": "windows",
+            "status": "offline",
+            "stats": {
+                "total_logs": 4,
+                "total_alerts": 2,
+                "active_alerts": 2,
+                "last_seen": "2025-12-06T10:00:05"
+            }
+        },
+        {
+            "id": 12,
+            "hostname": "WIN-WS01",
+            "ip_address": "127.0.0.1",
+            "server_type": "windows",
+            "status": "offline",
+            "stats": {
+                "total_logs": 4,
+                "total_alerts": 2,
+                "active_alerts": 2,
+                "last_seen": "2025-12-06T10:00:08"
+            }
+        },
+        {
+            "id": 13,
+            "hostname": "Hp-lap704",
+            "ip_address": "192.168.0.102",
+            "server_type": "linux",
+            "status": "offline",
+            "stats": {
+                "total_logs": 61,
+                "total_alerts": 0,
+                "active_alerts": 0,
+                "last_seen": "2025-12-06T17:32:04.157723"
+            }
+        },
+        {
+            "id": 14,
+            "hostname": "DC01",
+            "ip_address": "127.0.0.1",
+            "server_type": "windows",
+            "status": "offline",
+            "stats": {
+                "total_logs": 1,
+                "total_alerts": 1,
+                "active_alerts": 1,
+                "last_seen": "2025-12-06T20:42:24"
+            }
+        },
+        {
+            "id": 15,
+            "hostname": "WEB-SERVER",
+            "ip_address": "127.0.0.1",
+            "server_type": "windows",
+            "status": "offline",
+            "stats": {
+                "total_logs": 1,
+                "total_alerts": 1,
+                "active_alerts": 1,
+                "last_seen": "2025-12-06T20:42:24"
+            }
+        },
+        {
+            "id": 16,
+            "hostname": "Hp-lap704",
+            "ip_address": "192.168.137.247",
+            "server_type": "linux",
+            "status": "offline",
+            "stats": {
+                "total_logs": 19,
+                "total_alerts": 32,
+                "active_alerts": 32,
+                "last_seen": "2025-12-07T14:47:18.002165"
+            }
+        },
+        {
+            "id": 17,
+            "hostname": "HP-LAP704",
+            "ip_address": "10.78.233.207",
+            "server_type": "windows",
             "status": "online",
-            "log_count": 3421,
-            "alert_count": 5,
-            "last_log_time": datetime.now().isoformat(),
-            "first_seen": (datetime.now() - timedelta(days=90)).isoformat(),
-            "last_seen": datetime.now().isoformat()
+            "stats": {
+                "total_logs": 14175,
+                "total_alerts": 14359,
+                "active_alerts": 14359,
+                "last_seen": "2025-12-08T07:21:16"
+            }
         }
     ]
     
-    return {"servers": dummy_servers, "count": len(dummy_servers)}
+    # Apply limit and offset
+    paginated_servers = servers_data[offset : offset + limit]
+    
+    return {
+        "servers": paginated_servers,
+        "total": len(servers_data),
+        "total_available": len(servers_data),
+        "limit": limit,
+        "offset": offset
+    }
 
 @app.get("/api/servers/{server_id}", response_model=ServerDetailResponse)
 async def get_server_detail(server_id: int):

@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Project Sentinel – Premium Security Dashboard</title>
+    <title>Trishul – Premium Security Dashboard</title>
 
     <!-- Fonts -->
     <link rel="stylesheet" href="assets/css/fonts.css">
@@ -242,15 +242,25 @@
             </div>
 
             <div class="text-center z-10">
-                <h2 class="font-display font-bold text-2xl tracking-tight">Sentinel Access</h2>
+                <h2 class="font-display font-bold text-2xl tracking-tight">Trishul Access</h2>
                 <p class="text-xs font-mono opacity-60 mt-2 uppercase tracking-widest">Restricted Environment</p>
             </div>
 
             <form onsubmit="handleLogin(event)" class="w-full z-10 space-y-4">
+                <div class="space-y-1">
+                    <div class="relative group">
+                        <i
+                            class="fas fa-edit absolute left-4 top-1/2 transform -translate-y-1/2 opacity-40 group-focus-within:text-green-500 transition-colors">
+                        </i>
+                        <input type="text" id="login-port" placeholder="Sender Port (Default: 5140)" value="5140"
+                            class="w-full bg-black/20 border border-white/10 rounded-lg py-3 pl-12 pr-4 outline-none focus:border-green-500/50 focus:bg-black/40 transition-all font-mono text-sm placeholder:text-white/20">
+                    </div>
+                    <p class="text-[10px] font-mono opacity-40 ml-1">Senders Port</p>
+                </div>
                 <div class="relative group">
                     <i
                         class="fas fa-lock absolute left-4 top-1/2 transform -translate-y-1/2 opacity-40 group-focus-within:text-green-500 transition-colors"></i>
-                    <input type="password" id="login-password" placeholder="Enter Access Code (admin)"
+                    <input type="password" id="login-password" placeholder="Enter Access Code"
                         class="w-full bg-black/20 border border-white/10 rounded-lg py-3 pl-12 pr-4 outline-none focus:border-green-500/50 focus:bg-black/40 transition-all font-mono text-sm placeholder:text-white/20">
                 </div>
 
@@ -259,17 +269,6 @@
                     <i class="fas fa-fingerprint"></i> Authenticate
                 </button>
 
-                <div class="relative flex py-2 items-center">
-                    <div class="flex-grow border-t border-white/10"></div>
-                    <span class="flex-shrink-0 mx-4 text-[10px] font-mono opacity-40 uppercase">Or</span>
-                    <div class="flex-grow border-t border-white/10"></div>
-                </div>
-
-                <button type="button" onclick="handleBiometricLogin()"
-                    class="w-full bg-white/5 border border-white/10 text-white font-mono text-xs py-3 rounded-lg hover:bg-white/10 transition-all flex items-center justify-center gap-2 group">
-                    <i class="fas fa-fingerprint text-green-500 group-hover:scale-110 transition-transform"></i>
-                    <span>Biometric Scan</span>
-                </button>
             </form>
 
             <div class="text-[10px] font-mono opacity-30 uppercase tracking-widest mt-4">
@@ -290,10 +289,12 @@
                 </button>
                 <div
                     class="w-8 h-8 bg-black dark:bg-white text-white dark:text-black rounded flex items-center justify-center font-bold font-display text-lg">
-                    S</div>
+                    T</div>
                 <div class="flex flex-col">
-                    <span class="font-display font-bold text-lg tracking-tight leading-none uppercase">Sentinel</span>
-                    <span class="text-[10px] font-mono opacity-60 tracking-widest uppercase">Security Operations</span>
+                    <span class="font-display font-bold text-lg tracking-tight leading-none uppercase"
+                        data-i18n="title_Trishul">Trishul</span>
+                    <span class="text-[10px] font-mono opacity-60 tracking-widest uppercase"
+                        data-i18n="subtitle_ops">Security Operations</span>
                 </div>
             </div>
 
@@ -302,33 +303,49 @@
                 <div class="flex items-center gap-2 mr-4">
                     <button onclick="toggleWidgetLibrary()"
                         class="px-3 py-1.5 rounded flex items-center gap-2 hover:bg-white/10 transition-colors text-xs font-mono border border-yellow-500/30 text-yellow-500">
-                        <i class="fas fa-th-large"></i> <span class="hidden md:inline">Widgets</span>
-                    </button>
-                    <button onclick="triggerPluginUpload()"
-                        class="px-3 py-1.5 rounded flex items-center gap-2 hover:bg-white/10 transition-colors text-xs font-mono border border-cyan-500/30 text-cyan-500">
-                        <i class="fas fa-plus-square"></i> <span class="hidden md:inline">Plugin</span>
+                        <i class="fas fa-th-large"></i> <span class="hidden md:inline"
+                            data-i18n="btn_widgets">Widgets</span>
                     </button>
                     <input type="file" id="plugin-upload-input" accept=".html,.py" class="hidden"
                         onchange="handlePluginUpload(this)">
                     <button onclick="generateReport()"
                         class="px-3 py-1.5 rounded flex items-center gap-2 hover:bg-white/10 transition-colors text-xs font-mono border border-blue-500/30 text-blue-500">
-                        <i class="fas fa-file-alt"></i> <span class="hidden md:inline">Report</span>
+                        <i class="fas fa-file-alt"></i> <span class="hidden md:inline"
+                            data-i18n="btn_report">Report</span>
                     </button>
                 </div>
 
                 <div class="hidden md:flex items-center gap-4 text-xs font-mono opacity-60">
                     <span class="flex items-center gap-2 border-r border-current/20 pr-4">
                         <i class="fab fa-linux text-lg"></i>
-                        <span>HOST: LINUX</span>
+                        <span data-i18n="host_linux">HOST: LINUX</span>
                     </span>
-                    <span id="clock">00:00:00 UTC</span>
+                    <span id="clock">00:00:00 IST</span>
                     <span>•</span>
                     <span class="flex items-center gap-1">
-                        <div class="w-1.5 h-1.5 rounded-full bg-green-500"></div> SYSTEM ONLINE
+                        <div class="w-1.5 h-1.5 rounded-full bg-green-500"></div> <span data-i18n="system_online">SYSTEM
+                            ONLINE</span>
                     </span>
                 </div>
 
                 <div class="h-4 w-[1px] bg-current opacity-20"></div>
+
+                <!-- Language Switcher -->
+                <!-- Language Switcher -->
+                <div class="relative group mr-2">
+                    <button onclick="toggleLanguageMenu()"
+                        class="flex items-center gap-2 opacity-60 hover:opacity-100 transition-opacity text-xs font-mono">
+                        <i class="fas fa-language text-lg"></i>
+                        <span id="current-lang">EN</span>
+                    </button>
+                    <div id="language-menu"
+                        class="hidden absolute top-full right-0 mt-2 w-24 bg-white dark:bg-black border border-gray-200 dark:border-white/10 rounded shadow-xl z-50 flex flex-col overflow-hidden">
+                        <button onclick="setLanguage('en')"
+                            class="px-3 py-2 text-left hover:bg-gray-100 dark:hover:bg-white/10 transition text-xs">English</button>
+                        <button onclick="setLanguage('hi')"
+                            class="px-3 py-2 text-left hover:bg-gray-100 dark:hover:bg-white/10 transition text-xs">Hindi</button>
+                    </div>
+                </div>
 
                 <button onclick="toggleTheme()" class="opacity-60 hover:opacity-100 transition-opacity">
                     <i class="fas fa-adjust text-lg"></i>
@@ -352,40 +369,38 @@
             <div class="flex-1 overflow-y-auto py-4 space-y-1">
                 <button onclick="switchView('dashboard')" id="nav-dashboard"
                     class="w-full text-left px-6 py-3 text-sm font-mono hover:bg-white/5 transition-colors flex items-center gap-3 border-l-2 border-transparent text-green-500 border-green-500 bg-white/5">
-                    <i class="fas fa-chart-line w-5 text-center"></i> Dashboard
+                    <i class="fas fa-chart-line w-5 text-center"></i> <span data-i18n="nav_dashboard">Dashboard</span>
                 </button>
                 <button onclick="switchView('logs')" id="nav-logs"
                     class="w-full text-left px-6 py-3 text-sm font-mono hover:bg-white/5 transition-colors flex items-center gap-3 border-l-2 border-transparent opacity-70 hover:opacity-100">
-                    <i class="fas fa-list-alt w-5 text-center"></i> System Logs
+                    <i class="fas fa-list-alt w-5 text-center"></i> <span data-i18n="nav_logs">System Logs</span>
                 </button>
                 <button onclick="switchView('devices')" id="nav-devices"
                     class="w-full text-left px-6 py-3 text-sm font-mono hover:bg-white/5 transition-colors flex items-center gap-3 border-l-2 border-transparent opacity-70 hover:opacity-100">
-                    <i class="fas fa-network-wired w-5 text-center"></i> Device Discovery
+                    <i class="fas fa-network-wired w-5 text-center"></i> <span data-i18n="nav_devices">Device
+                        Discovery</span>
                 </button>
-                <button onclick="switchView('plugins')" id="nav-plugins"
+                <!-- <button onclick="switchView('plugins')" id="nav-plugins"
                     class="w-full text-left px-6 py-3 text-sm font-mono hover:bg-white/5 transition-colors flex items-center gap-3 border-l-2 border-transparent opacity-70 hover:opacity-100">
-                    <i class="fas fa-plug w-5 text-center"></i> Plugin System
+                    <i class="fas fa-plug w-5 text-center"></i> <span data-i18n="nav_plugins">Plugin System</span>
                 </button>
                 <button onclick="switchView('sigma')" id="nav-sigma"
                     class="w-full text-left px-6 py-3 text-sm font-mono hover:bg-white/5 transition-colors flex items-center gap-3 border-l-2 border-transparent opacity-70 hover:opacity-100">
-                    <i class="fas fa-code w-5 text-center"></i> Sigma Rule Editor
+                    <i class="fas fa-code w-5 text-center"></i> <span data-i18n="nav_sigma">Sigma Rule Editor</span>
                 </button>
 
                 <div class="h-px bg-white/10 mx-6 my-2"></div>
 
                 <button onclick="switchView('decrypt')" id="nav-decrypt"
                     class="w-full text-left px-6 py-3 text-sm font-mono hover:bg-white/5 transition-colors flex items-center gap-3 border-l-2 border-transparent opacity-70 hover:opacity-100">
-                    <i class="fas fa-unlock-alt w-5 text-center"></i> Decrypt Report
+                    <i class="fas fa-unlock-alt w-5 text-center"></i> <span data-i18n="nav_decrypt">Decrypt
+                        Report</span>
                 </button>
                 <button onclick="switchView('upload')" id="nav-upload"
                     class="w-full text-left px-6 py-3 text-sm font-mono hover:bg-white/5 transition-colors flex items-center gap-3 border-l-2 border-transparent opacity-70 hover:opacity-100">
-                    <i class="fas fa-cloud-upload-alt w-5 text-center"></i> Upload Log
-                </button>
-            </div>
-            <div class="p-4 border-t border-white/10">
-                <div class="text-[10px] font-mono opacity-40 text-center">
-                    v2.0.0 Stable
-                </div>
+                    <i class="fas fa-cloud-upload-alt w-5 text-center"></i> <span data-i18n="nav_upload">Upload
+                        Log</span>
+                </button> -->
             </div>
         </aside>
 
@@ -410,14 +425,15 @@
                             <div class="widget-remove-btn" onclick="removeWidget('widget-stat-threat')"><i
                                     class="fas fa-times"></i></div>
                             <div class="flex justify-between items-start">
-                                <span class="text-xs font-mono uppercase opacity-60 tracking-wider">Threat Level</span>
+                                <span class="text-xs font-mono uppercase opacity-60 tracking-wider"
+                                    data-i18n="stat_threat">Threat Level</span>
                                 <i
                                     class="fas fa-shield-alt text-sm opacity-40 group-hover:opacity-100 transition-opacity"></i>
                             </div>
                             <div>
-                                <span class="text-3xl font-display font-bold">Low</span>
+                                <span class="text-3xl font-display font-bold" data-i18n="val_threat_high">High</span>
                                 <div class="w-full bg-gray-200 dark:bg-gray-800 h-1 mt-2 rounded-full overflow-hidden">
-                                    <div class="bg-black dark:bg-white h-full w-[20%] transition-all duration-500">
+                                    <div class="bg-black dark:bg-white h-full w-[80%] transition-all duration-500">
                                     </div>
                                 </div>
                             </div>
@@ -429,7 +445,8 @@
                             <div class="widget-remove-btn" onclick="removeWidget('widget-stat-logs')"><i
                                     class="fas fa-times"></i></div>
                             <div class="flex justify-between items-start">
-                                <span class="text-xs font-mono uppercase opacity-60 tracking-wider">Total Logs</span>
+                                <span class="text-xs font-mono uppercase opacity-60 tracking-wider"
+                                    data-i18n="stat_logs">Total Logs</span>
                                 <i
                                     class="fas fa-file-alt text-sm opacity-40 group-hover:opacity-100 transition-opacity"></i>
                             </div>
@@ -445,8 +462,8 @@
                             <div class="widget-remove-btn" onclick="removeWidget('widget-stat-online')"><i
                                     class="fas fa-times"></i></div>
                             <div class="flex justify-between items-start">
-                                <span class="text-xs font-mono uppercase opacity-60 tracking-wider">Online
-                                    Devices</span>
+                                <span class="text-xs font-mono uppercase opacity-60 tracking-wider"
+                                    data-i18n="stat_online">Online Devices</span>
                                 <i
                                     class="fas fa-laptop text-sm opacity-40 group-hover:opacity-100 transition-opacity"></i>
                             </div>
@@ -463,7 +480,8 @@
                             <div class="widget-remove-btn" onclick="removeWidget('widget-stat-alerts')"><i
                                     class="fas fa-times"></i></div>
                             <div class="flex justify-between items-start">
-                                <span class="text-xs font-mono uppercase opacity-60 tracking-wider">Total Alerts</span>
+                                <span class="text-xs font-mono uppercase opacity-60 tracking-wider"
+                                    data-i18n="stat_alerts">Total Alerts</span>
                                 <i
                                     class="fas fa-bell text-sm opacity-40 group-hover:opacity-100 transition-opacity"></i>
                             </div>
@@ -480,50 +498,9 @@
 
                         <!-- Left Column: Charts -->
                         <div id="main-left-col" class="lg:col-span-2 space-y-6 drop-zone" data-zone="main">
-                            <!-- Events Graph -->
-                            <div id="widget-chart-events" draggable="true"
-                                class="panel p-6 rounded-lg draggable-widget">
-                                <div class="widget-remove-btn" onclick="removeWidget('widget-chart-events')"><i
-                                        class="fas fa-times"></i></div>
-                                <div class="flex justify-between items-center mb-6">
-                                    <div>
-                                        <h3 class="font-display font-bold text-lg">Alert Timeline</h3>
-                                        <span id="events-time-display"
-                                            class="text-xs font-mono opacity-50 block mt-1">Today</span>
-                                    </div>
-                                    <div class="flex gap-2">
-                                        <button
-                                            class="text-xs font-mono px-2 py-1 rounded bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 transition">1H</button>
-                                        <button
-                                            class="text-xs font-mono px-2 py-1 rounded bg-black dark:bg-white text-white dark:text-black">24H</button>
-                                    </div>
-                                </div>
-                                <div class="h-64 w-full">
-                                    <canvas id="eventsChart"></canvas>
-                                </div>
-                            </div>
 
-                            <!-- Integrations & Plugins Tile -->
-                            <div id="widget-integrations" draggable="true"
-                                class="panel p-6 rounded-lg draggable-widget">
-                                <div class="widget-remove-btn" onclick="removeWidget('widget-integrations')"><i
-                                        class="fas fa-times"></i></div>
-                                <div class="flex justify-between items-center mb-6">
-                                    <div>
-                                        <h3 class="font-display font-bold text-lg">Integrations & Plugins</h3>
-                                        <p class="text-xs opacity-60 mt-1">Active external connectors</p>
-                                    </div>
-                                </div>
-                                <div id="integrations-grid"
-                                    class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                                    <!-- Default State: No Plugins -->
-                                    <div id="no-plugins-msg"
-                                        class="col-span-full text-center py-8 opacity-40 italic flex flex-col items-center gap-2">
-                                        <i class="fas fa-plug text-2xl"></i>
-                                        <span>No plugins added yet.</span>
-                                    </div>
-                                </div>
-                            </div>
+
+
 
                             <!-- Top Threats Tile -->
                             <div id="widget-top-threats" draggable="true"
@@ -542,13 +519,12 @@
                                         <thead
                                             class="sticky top-0 z-10 bg-gray-100 dark:bg-[#111] font-mono uppercase text-[10px] tracking-wider">
                                             <tr>
-                                                <th class="p-3 border-b border-gray-200 dark:border-white/10">Threat
-                                                    Title</th>
-                                                <th class="p-3 border-b border-gray-200 dark:border-white/10 w-24">
-                                                    Severity</th>
-                                                <th
-                                                    class="p-3 border-b border-gray-200 dark:border-white/10 w-20 text-right">
-                                                    Count</th>
+                                                <th class="p-3 border-b border-gray-200 dark:border-white/10"
+                                                    data-i18n="th_threat_title">Threat Title</th>
+                                                <th class="p-3 border-b border-gray-200 dark:border-white/10 w-24"
+                                                    data-i18n="th_severity">Severity</th>
+                                                <th class="p-3 border-b border-gray-200 dark:border-white/10 w-20 text-right"
+                                                    data-i18n="th_count">Count</th>
                                             </tr>
                                         </thead>
                                         <tbody id="threats-table-body"
@@ -570,24 +546,24 @@
 
                                 <div
                                     class="panel p-4 rounded-lg flex flex-col items-center justify-center text-center gap-1 border-b-2 border-red-500">
-                                    <span class="text-[10px] font-mono uppercase opacity-60 text-red-500">Critical
-                                        Alert</span>
+                                    <span class="text-[10px] font-mono uppercase opacity-60 text-red-500"
+                                        data-i18n="sev_critical">Critical Alert</span>
                                     <span class="text-xl font-display font-bold text-red-500"
                                         id="stat-sev-critical">0</span>
                                 </div>
 
                                 <div
                                     class="panel p-4 rounded-lg flex flex-col items-center justify-center text-center gap-1 border-b-2 border-orange-500">
-                                    <span class="text-[10px] font-mono uppercase opacity-60 text-orange-500">Medium
-                                        Alert</span>
+                                    <span class="text-[10px] font-mono uppercase opacity-60 text-orange-500"
+                                        data-i18n="sev_medium">Warning Alert</span>
                                     <span class="text-xl font-display font-bold text-orange-500"
                                         id="stat-sev-medium">0</span>
                                 </div>
 
                                 <div
                                     class="panel p-4 rounded-lg flex flex-col items-center justify-center text-center gap-1 border-b-2 border-blue-500">
-                                    <span class="text-[10px] font-mono uppercase opacity-60 text-blue-500">Low
-                                        Alert</span>
+                                    <span class="text-[10px] font-mono uppercase opacity-60 text-blue-500"
+                                        data-i18n="sev_low">Info Alert</span>
                                     <span class="text-xl font-display font-bold text-blue-500"
                                         id="stat-sev-low">0</span>
                                 </div>
@@ -598,7 +574,8 @@
                                 class="panel p-6 rounded-lg draggable-widget">
                                 <div class="widget-remove-btn" onclick="removeWidget('widget-chart-alerts')"><i
                                         class="fas fa-times"></i></div>
-                                <h3 class="font-display font-bold text-lg mb-4">Alert Distribution</h3>
+                                <h3 class="font-display font-bold text-lg mb-4" data-i18n="chart_alerts">Alert
+                                    Distribution</h3>
                                 <div class="h-48 w-full flex justify-center">
                                     <canvas id="alertsChart"></canvas>
                                 </div>
@@ -608,7 +585,8 @@
                             <div id="widget-chart-mitre" draggable="true" class="panel p-6 rounded-lg draggable-widget">
                                 <div class="widget-remove-btn" onclick="removeWidget('widget-chart-mitre')"><i
                                         class="fas fa-times"></i></div>
-                                <h3 class="font-display font-bold text-lg mb-4">MITRE ATT&CK</h3>
+                                <h3 class="font-display font-bold text-lg mb-4" data-i18n="chart_mitre">MITRE ATT&CK
+                                </h3>
                                 <div class="h-48 w-full flex justify-center">
                                     <canvas id="mitreChart"></canvas>
                                 </div>
@@ -619,7 +597,8 @@
                                 class="panel p-6 rounded-lg draggable-widget">
                                 <div class="widget-remove-btn" onclick="removeWidget('widget-chart-log-source')"><i
                                         class="fas fa-times"></i></div>
-                                <h3 class="font-display font-bold text-lg mb-4">Log Source Distribution</h3>
+                                <h3 class="font-display font-bold text-lg mb-4" data-i18n="chart_log_source">Log Source
+                                    Distribution</h3>
                                 <div class="h-48 w-full flex justify-center">
                                     <canvas id="logSourceChart"></canvas>
                                 </div>
@@ -637,22 +616,22 @@
                 <div class="panel p-6 rounded-lg h-[calc(100vh-8rem)] flex flex-col">
                     <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
                         <div class="flex items-center gap-4">
-                            <h2 class="font-display font-bold text-2xl">System Logs</h2>
+                            <h2 class="font-display font-bold text-2xl" data-i18n="title_logs">System Logs</h2>
                             <!-- Source Toggles -->
                             <div class="flex bg-black/20 rounded-lg p-1 border border-white/10">
                                 <button onclick="setLogSource('linux')" id="btn-source-linux"
                                     class="px-3 py-1.5 rounded text-xs font-bold flex items-center gap-2 transition-all bg-white/10 text-white shadow">
-                                    <i class="fab fa-linux"></i> Linux
+                                    <i class="fab fa-linux"></i> <span data-i18n="btn_linux">Linux</span>
                                 </button>
                                 <button onclick="setLogSource('windows')" id="btn-source-windows"
                                     class="px-3 py-1.5 rounded text-xs font-bold flex items-center gap-2 transition-all opacity-60 hover:opacity-100">
-                                    <i class="fab fa-windows"></i> Windows
+                                    <i class="fab fa-windows"></i> <span data-i18n="btn_windows">Windows</span>
                                 </button>
                             </div>
                         </div>
                         <div class="flex gap-2">
                             <input type="text" id="full-logs-search" placeholder="Search logs..."
-                                class="input-field rounded px-4 py-2 text-sm w-64">
+                                data-i18n="placeholder_search" class="input-field rounded px-4 py-2 text-sm w-64">
                             <button onclick="fetchSystemLogs()"
                                 class="px-4 py-2 rounded bg-white/10 hover:bg-white/20 text-white text-sm font-bold"><i
                                     class="fas fa-sync"></i></button>
@@ -666,11 +645,11 @@
                             <thead
                                 class="table-header font-mono uppercase sticky top-0 z-10 bg-gray-100 dark:bg-[#0a0a0a] border-b border-gray-200 dark:border-white/10 shadow-sm">
                                 <tr>
-                                    <th class="p-4 w-20">ID</th>
-                                    <th class="p-4 w-24">Source</th>
-                                    <th class="p-4">Content</th>
-                                    <th class="p-4 w-48">Time</th>
-                                    <th class="p-4 w-48 text-right">Server</th>
+                                    <th class="p-4 w-20" data-i18n="th_id">ID</th>
+                                    <th class="p-4 w-24" data-i18n="th_source">Source</th>
+                                    <th class="p-4" data-i18n="th_content">Content</th>
+                                    <th class="p-4 w-48" data-i18n="th_time">Time</th>
+                                    <th class="p-4 w-48 text-right" data-i18n="th_server">Server</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-white/5 font-mono" id="full-logs-body">
@@ -698,10 +677,48 @@
 
             <!-- View: Device Discovery -->
             <div id="view-devices" class="view-section hidden p-6 space-y-6">
-                <h2 class="font-display font-bold text-2xl">Device Discovery</h2>
+                <h2 class="font-display font-bold text-2xl" data-i18n="title_devices">Device Discovery</h2>
                 <div class="grid grid-cols-1 gap-6">
+                    <div class="panel p-6 rounded-lg">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="font-bold" data-i18n="subtitle_network">Network Devices (Servers)</h3>
+                            <button onclick="fetchDevices()" class="text-xs bg-white/10 px-2 py-1 rounded"
+                                data-i18n="btn_refresh">Refresh</button>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-sm">
+                                <thead class="table-header font-mono uppercase">
+                                    <tr>
+                                        <th class="p-3" data-i18n="th_hostname">Hostname</th>
+                                        <th class="p-3" data-i18n="th_ip">IP Address</th>
+                                        <th class="p-3" data-i18n="th_type">Type</th>
+                                        <th class="p-3 text-right" data-i18n="th_status">Status</th>
+                                        <th class="p-3 text-right" data-i18n="th_logs">Logs</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-white/5" id="network-devices-body">
+                                    <!-- Devices injected here -->
+                                </tbody>
+                            </table>
+                        </div>
+                        <!-- Pagination Controls -->
+                        <div class="mt-4 flex justify-between items-center border-t border-white/10 pt-4">
+                            <span class="text-xs opacity-60 font-mono" id="devices-pagination-info">Showing 0-0 of
+                                0</span>
+                            <div class="flex gap-2">
+                                <button onclick="changeDevicePage(-1)" id="btn-prev-device-page" disabled
+                                    class="px-3 py-1.5 rounded bg-white/5 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed text-xs font-bold transition">
+                                    <i class="fas fa-chevron-left mr-1"></i> Previous
+                                </button>
+                                <button onclick="changeDevicePage(1)" id="btn-next-device-page" disabled
+                                    class="px-3 py-1.5 rounded bg-white/5 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed text-xs font-bold transition">
+                                    Next <i class="fas fa-chevron-right ml-1"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                     <div class="panel p-6 rounded-lg h-96 flex flex-col">
-                        <h3 class="font-bold mb-4">USB & Hardware</h3>
+                        <h3 class="font-bold mb-4" data-i18n="subtitle_usb">USB & Hardware</h3>
                         <div class="overflow-y-auto flex-1 custom-scrollbar space-y-2">
                             <!-- Item 1 -->
                             <div
@@ -777,29 +794,6 @@
                             </div>
                         </div>
                     </div>
-                    <div class="panel p-6 rounded-lg">
-                        <div class="flex justify-between items-center mb-4">
-                            <h3 class="font-bold">Network Devices (Servers)</h3>
-                            <button onclick="fetchDevices()"
-                                class="text-xs bg-white/10 px-2 py-1 rounded">Refresh</button>
-                        </div>
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-left text-sm">
-                                <thead class="table-header font-mono uppercase">
-                                    <tr>
-                                        <th class="p-3">Hostname</th>
-                                        <th class="p-3">IP Address</th>
-                                        <th class="p-3">Type</th>
-                                        <th class="p-3 text-right">Status</th>
-                                        <th class="p-3 text-right">Logs</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="divide-y divide-white/5" id="network-devices-body">
-                                    <!-- Devices injected here -->
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
                 </div>
             </div>
 
@@ -814,10 +808,10 @@
                             <i class="fas fa-file-pdf text-2xl"></i>
                         </div>
                         <div>
-                            <h3 class="font-bold text-lg">Upload Encrypted PDF</h3>
+                            <h3 class="font-bold text-lg">Upload Encrypted Report (.bin)</h3>
                             <p class="text-xs opacity-60 mt-1">Drag & drop or click to browse</p>
                         </div>
-                        <input type="file" id="decrypt-file-input" accept=".pdf" class="hidden"
+                        <input type="file" id="decrypt-file-input" accept=".bin" class="hidden"
                             onchange="handleDecryptFileSelect(this)">
                         <button onclick="document.getElementById('decrypt-file-input').click()"
                             class="px-6 py-2 rounded bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold transition-colors">
@@ -838,15 +832,25 @@
                                 </div>
                             </div>
                         </div>
-                        <div id="decrypt-actions" class="mt-4 flex justify-end hidden">
-                            <button
+                    </div>
+                    <div id="decrypt-actions" class="mt-4 flex flex-col gap-3 hidden">
+                        <input type="text" id="decrypt-key-input" placeholder="Enter Decryption Key (Hex)"
+                            class="w-full bg-black/20 border border-white/10 rounded px-3 py-2 text-sm outline-none focus:border-blue-500 font-mono">
+                        <div class="flex justify-end">
+                            <button onclick="processDecryption()"
                                 class="px-4 py-2 rounded bg-green-600 hover:bg-green-500 text-white text-sm font-bold flex items-center gap-2">
-                                <i class="fas fa-download"></i> Download Decrypted File
+                                <i class="fas fa-unlock"></i> Decrypt & View
                             </button>
                         </div>
                     </div>
+
+                    <!-- Decrypted Content Container -->
+                    <div id="decrypted-content" class="mt-8 hidden space-y-6">
+                        <!-- Injected Content -->
+                    </div>
                 </div>
             </div>
+
 
             <!-- View: Upload Log -->
             <div id="view-upload" class="view-section hidden p-6">
@@ -1029,7 +1033,7 @@
                     <div class="flex items-center gap-2">
                         <div id="chat-3d-container"
                             class="w-8 h-8 rounded-full bg-black/10 dark:bg-white/10 overflow-hidden"></div>
-                        <span class="font-display font-bold text-sm">Sentinel Assistant</span>
+                        <span class="font-display font-bold text-sm">Trishul Assistant</span>
                     </div>
                     <div class="flex items-center gap-3">
                         <button onclick="toggleChatFullScreen()" class="opacity-50 hover:opacity-100"
@@ -1129,14 +1133,22 @@
             // Logs will be fetched from server
             // generateLogs();
 
-            function handleLogin(e) {
+            async function handleLogin(e) {
                 e.preventDefault();
                 const password = document.getElementById('login-password').value;
+                const port = document.getElementById('login-port').value || 5140;
                 const overlay = document.getElementById('login-overlay');
                 const content = document.getElementById('app-content');
 
                 // Hardcoded demo password
                 if (password === 'admin' || password === '1234') {
+                    // Update Port
+                    try {
+                        await fetch(`/api/config/ingestion-port?port=${port}`, { method: 'POST' });
+                        showToast(`Ingestion Port set to ${port}`, 'info');
+                    } catch (err) {
+                        console.error("Failed to update port", err);
+                    }
                     // Success
                     overlay.classList.add('opacity-0', 'pointer-events-none');
                     content.classList.remove('opacity-0', 'blur-xl', 'pointer-events-none');
@@ -1179,7 +1191,7 @@
                     // This effectively asks the OS to "Verify it's you to create a key".
                     const publicKey = {
                         challenge: new Uint8Array(32), // Random challenge
-                        rp: { name: "Sentinel Dashboard" },
+                        rp: { name: "Trishul Dashboard" },
                         user: {
                             id: new Uint8Array(16),
                             name: "admin",
@@ -1785,122 +1797,125 @@
                 Chart.defaults.scale.grid.color = 'rgba(128, 128, 128, 0.1)';
 
                 // Events Chart (Stacked Area - Realtime)
-                const ctxEvents = document.getElementById('eventsChart').getContext('2d');
+                // Events Chart (Stacked Area - Realtime)
+                const eventsCanvas = document.getElementById('eventsChart');
+                if (eventsCanvas) {
+                    const ctxEvents = eventsCanvas.getContext('2d');
 
-                // Generate initial data
-                const initialDataPoints = 60;
-                const labels = [];
-                const data1 = [];
-                const data2 = [];
-                const data3 = [];
+                    // Generate initial data
+                    const initialDataPoints = 60;
+                    const labels = [];
+                    const data1 = [];
+                    const data2 = [];
+                    const data3 = [];
 
-                let now = new Date();
-                for (let i = 0; i < initialDataPoints; i++) {
-                    const t = new Date(now.getTime() - (initialDataPoints - i) * 1000);
-                    labels.push(t.getHours().toString().padStart(2, '0') + ':' + t.getMinutes().toString().padStart(2, '0') + ':' + t.getSeconds().toString().padStart(2, '0'));
-                    data1.push(Math.floor(Math.random() * 30) + 10);
-                    data2.push(Math.floor(Math.random() * 20) + 5);
-                    data3.push(Math.floor(Math.random() * 15) + 5);
-                }
-
-                const eventsChart = new Chart(ctxEvents, {
-                    type: 'line',
-                    data: {
-                        labels: labels,
-                        datasets: [
-                            {
-                                label: 'Web Server',
-                                data: data1,
-                                borderColor: document.documentElement.classList.contains('dark') ? '#ffffff' : '#000000',
-                                borderWidth: 1.5,
-                                backgroundColor: (context) => {
-                                    const ctx = context.chart.ctx;
-                                    const gradient = ctx.createLinearGradient(0, 0, 0, 300);
-                                    const color = document.documentElement.classList.contains('dark') ? '255, 255, 255' : '0, 0, 0';
-                                    gradient.addColorStop(0, `rgba(${color}, 0.2)`);
-                                    gradient.addColorStop(1, `rgba(${color}, 0)`);
-                                    return gradient;
-                                },
-                                tension: 0.4,
-                                pointRadius: 0,
-                                fill: true
-                            },
-                            {
-                                label: 'App Server',
-                                data: data2,
-                                borderColor: '#8b5cf6', // Purple
-                                backgroundColor: 'rgba(139, 92, 246, 0.2)',
-                                fill: true,
-                                tension: 0.4,
-                                pointRadius: 0
-                            },
-                            {
-                                label: 'DB Server',
-                                data: data3,
-                                borderColor: '#10b981', // Emerald
-                                backgroundColor: 'rgba(16, 185, 129, 0.2)',
-                                fill: true,
-                                tension: 0.4,
-                                pointRadius: 0
-                            }
-                        ]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        animation: false, // Disable default animation for smooth realtime updates
-                        plugins: {
-                            legend: { display: true, position: 'top', align: 'end', labels: { boxWidth: 8, usePointStyle: true } },
-                            tooltip: { mode: 'index', intersect: false }
-                        },
-                        scales: {
-                            x: {
-                                grid: { display: false },
-                                border: { display: false },
-                                ticks: { maxTicksLimit: 6, maxRotation: 0 }
-                            },
-                            y: {
-                                stacked: true,
-                                border: { display: false },
-                                min: 0,
-                                suggestedMax: 100
-                            }
-                        },
-                        interaction: {
-                            mode: 'nearest',
-                            axis: 'x',
-                            intersect: false
-                        }
+                    let now = new Date();
+                    for (let i = 0; i < initialDataPoints; i++) {
+                        const t = new Date(now.getTime() - (initialDataPoints - i) * 1000);
+                        labels.push(t.getHours().toString().padStart(2, '0') + ':' + t.getMinutes().toString().padStart(2, '0') + ':' + t.getSeconds().toString().padStart(2, '0'));
+                        data1.push(Math.floor(Math.random() * 30) + 10);
+                        data2.push(Math.floor(Math.random() * 20) + 5);
+                        data3.push(Math.floor(Math.random() * 15) + 5);
                     }
-                });
 
-                // Real-time Update Loop for Events Chart
-                setInterval(() => {
-                    const now = new Date();
-                    const timeLabel = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0') + ':' + now.getSeconds().toString().padStart(2, '0');
-
-                    // Remove oldest
-                    eventsChart.data.labels.shift();
-                    eventsChart.data.datasets.forEach(ds => ds.data.shift());
-
-                    // Add newest
-                    eventsChart.data.labels.push(timeLabel);
-
-                    eventsChart.data.datasets.forEach(ds => {
-                        const last = ds.data[ds.data.length - 1];
-                        // Random walk
-                        let change = Math.floor(Math.random() * 10) - 4;
-                        let newVal = last + change;
-                        if (newVal < 5) newVal = 5;
-                        if (newVal > 50) newVal = 50;
-                        ds.data.push(newVal);
+                    const eventsChart = new Chart(ctxEvents, {
+                        type: 'line',
+                        data: {
+                            labels: labels,
+                            datasets: [
+                                {
+                                    label: 'Web Server',
+                                    data: data1,
+                                    borderColor: document.documentElement.classList.contains('dark') ? '#ffffff' : '#000000',
+                                    borderWidth: 1.5,
+                                    backgroundColor: (context) => {
+                                        const ctx = context.chart.ctx;
+                                        const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+                                        const color = document.documentElement.classList.contains('dark') ? '255, 255, 255' : '0, 0, 0';
+                                        gradient.addColorStop(0, `rgba(${color}, 0.2)`);
+                                        gradient.addColorStop(1, `rgba(${color}, 0)`);
+                                        return gradient;
+                                    },
+                                    tension: 0.4,
+                                    pointRadius: 0,
+                                    fill: true
+                                },
+                                {
+                                    label: 'App Server',
+                                    data: data2,
+                                    borderColor: '#8b5cf6', // Purple
+                                    backgroundColor: 'rgba(139, 92, 246, 0.2)',
+                                    fill: true,
+                                    tension: 0.4,
+                                    pointRadius: 0
+                                },
+                                {
+                                    label: 'DB Server',
+                                    data: data3,
+                                    borderColor: '#10b981', // Emerald
+                                    backgroundColor: 'rgba(16, 185, 129, 0.2)',
+                                    fill: true,
+                                    tension: 0.4,
+                                    pointRadius: 0
+                                }
+                            ]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            animation: false, // Disable default animation for smooth realtime updates
+                            plugins: {
+                                legend: { display: true, position: 'top', align: 'end', labels: { boxWidth: 8, usePointStyle: true } },
+                                tooltip: { mode: 'index', intersect: false }
+                            },
+                            scales: {
+                                x: {
+                                    grid: { display: false },
+                                    border: { display: false },
+                                    ticks: { maxTicksLimit: 6, maxRotation: 0 }
+                                },
+                                y: {
+                                    stacked: true,
+                                    border: { display: false },
+                                    min: 0,
+                                    suggestedMax: 100
+                                }
+                            },
+                            interaction: {
+                                mode: 'nearest',
+                                axis: 'x',
+                                intersect: false
+                            }
+                        }
                     });
 
-                    eventsChart.update('none'); // Efficient update
-                }, 1000);
+                    // Real-time Update Loop for Events Chart
+                    setInterval(() => {
+                        const now = new Date();
+                        const timeLabel = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0') + ':' + now.getSeconds().toString().padStart(2, '0');
 
+                        // Remove oldest
+                        eventsChart.data.labels.shift();
+                        eventsChart.data.datasets.forEach(ds => ds.data.shift());
 
-                window.charts.events = eventsChart;
+                        // Add newest
+                        eventsChart.data.labels.push(timeLabel);
+
+                        eventsChart.data.datasets.forEach(ds => {
+                            const last = ds.data[ds.data.length - 1];
+                            // Random walk
+                            let change = Math.floor(Math.random() * 10) - 4;
+                            let newVal = last + change;
+                            if (newVal < 5) newVal = 5;
+                            if (newVal > 50) newVal = 50;
+                            ds.data.push(newVal);
+                        });
+
+                        eventsChart.update('none'); // Efficient update
+                    }, 1000);
+
+                    window.charts.events = eventsChart;
+                }
 
                 // Alerts Chart (Doughnut)
                 const ctxAlerts = document.getElementById('alertsChart').getContext('2d');
@@ -1977,12 +1992,16 @@
                     const lineColor = isDark ? '#ffffff' : '#000000';
 
                     // Alerts Chart
-                    alertsChart.data.datasets[0].backgroundColor[2] = infoColor;
-                    alertsChart.update();
+                    if (window.charts.alerts) {
+                        window.charts.alerts.data.datasets[0].backgroundColor[2] = infoColor;
+                        window.charts.alerts.update();
+                    }
 
                     // Events Chart
-                    eventsChart.data.datasets[0].borderColor = lineColor;
-                    eventsChart.update();
+                    if (window.charts.events) {
+                        window.charts.events.data.datasets[0].borderColor = lineColor;
+                        window.charts.events.update();
+                    }
                 };
             }
 
@@ -2142,7 +2161,8 @@
 
             function updateClock() {
                 const now = new Date();
-                document.getElementById('clock').innerText = now.toISOString().split('T')[1].split('.')[0] + ' UTC';
+                const timeString = now.toLocaleTimeString('en-GB', { timeZone: 'Asia/Kolkata', hour12: false });
+                document.getElementById('clock').innerText = timeString + ' IST';
             }
             setInterval(updateClock, 1000);
 
@@ -2506,31 +2526,95 @@
                 renderLogsPage();
             }
 
+            let currentDevicePage = 0;
+            const DEVICES_PER_PAGE = 5;
+            let allDevicesCache = [];
+
             async function fetchDevices() {
+                try {
+                    // Fetch all devices (up to 200)
+                    const res = await fetch('/api/servers/?limit=200&offset=0');
+                    if (res.ok) {
+                        const data = await res.json();
+                        if (data.servers && Array.isArray(data.servers)) {
+                            allDevicesCache = data.servers;
+                            currentDevicePage = 0;
+                            renderDevicesPage();
+                        }
+                    }
+                } catch (e) {
+                    console.error("Failed to fetch devices:", e);
+                }
+            }
+
+            function renderDevicesPage() {
                 const tbody = document.getElementById('network-devices-body');
                 if (!tbody) return;
 
-                try {
-                    const res = await fetch('/api/servers');
-                    if (res.ok) {
-                        const data = await res.json();
-                        tbody.innerHTML = '';
-                        data.servers.forEach(server => {
-                            const tr = document.createElement('tr');
-                            tr.className = 'table-row transition-colors hover:bg-white/5';
-                            tr.innerHTML = `
-                                <td class="p-3 font-medium">${server.hostname}</td>
-                                <td class="p-3 font-mono opacity-70">${server.ip_address}</td>
-                                <td class="p-3 opacity-60">${server.server_type || 'Unknown'}</td>
-                                <td class="p-3 text-right"><span class="w-2 h-2 rounded-full ${server.status === 'online' ? 'bg-green-500' : 'bg-red-500'} inline-block"></span></td>
-                                <td class="p-3 text-right font-mono text-xs">${server.stats.total_logs}</td>
-                            `;
-                            tbody.appendChild(tr);
-                        });
+                tbody.innerHTML = '';
+
+                const start = currentDevicePage * DEVICES_PER_PAGE;
+                const end = start + DEVICES_PER_PAGE;
+                const devicesToShow = allDevicesCache.slice(start, end);
+
+                devicesToShow.forEach(server => {
+                    const tr = document.createElement('tr');
+                    tr.className = 'table-row transition-colors hover:bg-white/5 group';
+
+                    // Determine icon based on server_type
+                    let iconClass = 'fas fa-server opacity-50'; // Default
+                    const type = (server.server_type || '').toLowerCase();
+
+                    if (type.includes('linux')) {
+                        iconClass = 'fab fa-linux text-white';
+                    } else if (type.includes('windows')) {
+                        iconClass = 'fab fa-windows text-blue-400';
+                    } else if (type.includes('nginx')) {
+                        iconClass = 'fas fa-layer-group text-green-400';
                     }
-                } catch (e) {
-                    console.error(e);
-                }
+
+                    tr.innerHTML = `
+                        <td class="p-3 font-medium text-white/90">${server.hostname}</td>
+                        <td class="p-3 font-mono text-xs opacity-70">${server.ip_address}</td>
+                        <td class="p-3">
+                            <div class="flex items-center gap-2">
+                                <div class="w-6 flex justify-center">
+                                    <i class="${iconClass} text-lg"></i>
+                                </div>
+                                <span class="capitalize text-sm opacity-80">${server.server_type || 'Unknown'}</span>
+                            </div>
+                        </td>
+                        <td class="p-3 text-right">
+                            <div class="flex items-center justify-end gap-2">
+                                <span class="text-[10px] uppercase tracking-wider opacity-50 font-mono">${server.status}</span>
+                                <span class="w-2 h-2 rounded-full ${server.status === 'online' ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]' : 'bg-red-500'} inline-block"></span>
+                            </div>
+                        </td>
+                        <td class="p-3 text-right font-mono text-xs opacity-60 group-hover:opacity-100 transition-opacity">
+                            ${server.stats?.total_logs || 0}
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+
+                // Update Pagination UI
+                const total = allDevicesCache.length;
+                const showingStart = total > 0 ? start + 1 : 0;
+                const showingEnd = Math.min(end, total);
+
+                document.getElementById('devices-pagination-info').innerText = `Showing ${showingStart}-${showingEnd} of ${total}`;
+                document.getElementById('btn-prev-device-page').disabled = currentDevicePage === 0;
+                document.getElementById('btn-next-device-page').disabled = end >= total;
+            }
+
+            function changeDevicePage(delta) {
+                currentDevicePage += delta;
+                if (currentDevicePage < 0) currentDevicePage = 0;
+                // Check max page
+                const maxPage = Math.ceil(allDevicesCache.length / DEVICES_PER_PAGE) - 1;
+                if (currentDevicePage > maxPage) currentDevicePage = maxPage;
+
+                renderDevicesPage();
             }
 
             // Update search listener for full logs
@@ -2676,11 +2760,11 @@
                     }
                 });
                 layout.removed = Array.from(removedWidgets);
-                localStorage.setItem('sentinel_layout', JSON.stringify(layout));
+                localStorage.setItem('Trishul_layout', JSON.stringify(layout));
             }
 
             function loadLayout() {
-                const saved = localStorage.getItem('sentinel_layout');
+                const saved = localStorage.getItem('Trishul_layout');
                 if (!saved) return;
 
                 try {
@@ -2730,13 +2814,13 @@
                 } catch (e) {
                     console.error('Failed to load layout', e);
                     // Optionally, clear corrupted layout
-                    localStorage.removeItem('sentinel_layout');
+                    localStorage.removeItem('Trishul_layout');
                 }
             }
 
             function resetLayout() {
                 // 1. Clear Local Storage
-                localStorage.removeItem('sentinel_layout');
+                localStorage.removeItem('Trishul_layout');
 
                 // 2. Restore Removed Widgets
                 removedWidgets.forEach(id => {
@@ -2984,26 +3068,145 @@
                 const actions = document.getElementById('decrypt-actions');
 
                 statusDiv.classList.remove('hidden');
-                actions.classList.add('hidden');
+                actions.classList.add('hidden'); // Hide actions initially
                 filenameEl.innerText = file.name;
-                statusText.innerText = 'Decrypting...';
-                statusText.className = 'text-xs font-bold text-yellow-500';
+                statusText.innerText = 'Ready to Decrypt';
+                statusText.className = 'text-xs font-bold text-blue-500';
                 progress.style.width = '0%';
 
-                // Simulate Decryption Process
-                let width = 0;
-                const interval = setInterval(() => {
-                    width += 5;
-                    progress.style.width = width + '%';
+                // Show actions immediately for key input
+                actions.classList.remove('hidden');
+            }
 
-                    if (width >= 100) {
-                        clearInterval(interval);
-                        statusText.innerText = 'Decryption Complete';
-                        statusText.className = 'text-xs font-bold text-green-500';
-                        actions.classList.remove('hidden');
-                        showToast('File Decrypted Successfully', 'success');
+            async function processDecryption() {
+                const fileInput = document.getElementById('decrypt-file-input');
+                const keyInput = document.getElementById('decrypt-key-input');
+                const statusText = document.getElementById('decrypt-status-text');
+                const progress = document.getElementById('decrypt-progress');
+
+                const file = fileInput.files[0];
+                const keyHex = keyInput.value.trim();
+
+                if (!file || !keyHex) {
+                    showToast("Please provide file and key", "warning");
+                    return;
+                }
+
+                statusText.innerText = 'Decrypting...';
+                progress.style.width = '50%';
+
+                try {
+                    const arrayBuffer = await file.arrayBuffer();
+
+                    // Basic validation
+                    if (arrayBuffer.byteLength < 28) throw new Error("Invalid file format (too short)");
+
+                    const iv = new Uint8Array(arrayBuffer.slice(0, 12));
+                    const data = new Uint8Array(arrayBuffer.slice(12));
+
+                    const keyBuffer = hex2buf(keyHex);
+                    console.log("Importing Key (Hex):", buf2hex(keyBuffer));
+
+                    const key = await window.crypto.subtle.importKey(
+                        "raw",
+                        keyBuffer,
+                        { name: "AES-GCM" },
+                        true,
+                        ["decrypt"]
+                    );
+
+                    const decrypted = await window.crypto.subtle.decrypt(
+                        { name: "AES-GCM", iv: iv },
+                        key,
+                        data
+                    );
+
+                    const dec = new TextDecoder();
+                    const jsonString = dec.decode(decrypted);
+                    const jsonData = JSON.parse(jsonString);
+
+                    statusText.innerText = 'Rendering Report...';
+                    progress.style.width = '80%';
+
+                    // Render Content Locally
+                    const contentDiv = document.getElementById('decrypted-content');
+                    contentDiv.innerHTML = '';
+                    contentDiv.classList.remove('hidden');
+
+                    if (jsonData.sections && Array.isArray(jsonData.sections)) {
+                        jsonData.sections.forEach(section => {
+                            const sectionEl = document.createElement('div');
+                            sectionEl.className = 'panel p-6 rounded-lg border border-white/5';
+
+                            let contentHtml = '';
+
+                            if (section.type === 'table') {
+                                const headers = section.content.headers.map(h => `<th class="p-3 text-left opacity-60 font-mono text-xs uppercase">${h}</th>`).join('');
+                                const rows = section.content.rows.map(row => {
+                                    return `<tr class="border-b border-white/5 last:border-0 hover:bg-white/5 transition">
+                                        ${row.map(cell => `<td class="p-3 text-sm">${cell}</td>`).join('')}
+                                    </tr>`;
+                                }).join('');
+                                contentHtml = `
+                                    <div class="overflow-x-auto">
+                                        <table class="w-full">
+                                            <thead class="bg-white/5 border-b border-white/10"><tr>${headers}</tr></thead>
+                                            <tbody>${rows}</tbody>
+                                        </table>
+                                    </div>
+                                `;
+                            } else if (section.type === 'image') {
+                                contentHtml = `<img src="${section.content}" class="w-full rounded border border-white/10 bg-black/20 p-2">`;
+                            } else if (section.type === 'stat') {
+                                contentHtml = `
+                                    <div class="flex flex-col items-center justify-center py-4">
+                                        <span class="text-4xl font-bold font-display text-blue-500">${section.content.value}</span>
+                                        <span class="text-sm opacity-60 mt-2 text-center">${section.content.subtext}</span>
+                                    </div>
+                                `;
+                            } else {
+                                contentHtml = `<p class="text-sm opacity-80 whitespace-pre-wrap">${section.content}</p>`;
+                            }
+
+                            sectionEl.innerHTML = `
+                                <h3 class="font-display font-bold text-lg mb-4 border-b border-white/10 pb-2">${section.title}</h3>
+                                ${contentHtml}
+                            `;
+                            contentDiv.appendChild(sectionEl);
+                        });
                     }
-                }, 100);
+
+                    statusText.innerText = 'Complete';
+                    statusText.className = 'text-xs font-bold text-green-500';
+                    progress.style.width = '100%';
+                    showToast("Report Decrypted Successfully", "success");
+
+                } catch (e) {
+                    console.error(e);
+                    statusText.innerText = 'Decryption Failed';
+                    statusText.className = 'text-xs font-bold text-red-500';
+                    progress.style.width = '0%';
+                    if (e.name === 'OperationError') {
+                        showToast("Incorrect Key or Corrupted File", "error");
+                    } else {
+                        showToast("Decryption Failed: " + e.message, "error");
+                    }
+                }
+            }
+
+            function buf2hex(buffer) {
+                return [...new Uint8Array(buffer)]
+                    .map(x => x.toString(16).padStart(2, '0'))
+                    .join('');
+            }
+
+            function hex2buf(hex) {
+                if (!hex) return new Uint8Array(0);
+                const bytes = new Uint8Array(hex.length / 2);
+                for (let i = 0; i < bytes.length; i++) {
+                    bytes[i] = parseInt(hex.substr(i * 2, 2), 16);
+                }
+                return bytes;
             }
 
             function handleLogFileSelect(input) {
@@ -3213,28 +3416,50 @@
                         reportData.push(entry);
                     }
 
-                    // Send to backend
-                    const response = await fetch('/api/report/generate', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({ sections: reportData })
-                    });
+                    // ENCRYPTION & DOWNLOAD .BIN
+                    try {
+                        const key = await window.crypto.subtle.generateKey(
+                            { name: "AES-GCM", length: 256 },
+                            true,
+                            ["encrypt", "decrypt"]
+                        );
 
-                    if (response.ok) {
-                        const blob = await response.blob();
+                        const iv = window.crypto.getRandomValues(new Uint8Array(12));
+                        const enc = new TextEncoder();
+                        const data = enc.encode(JSON.stringify({ sections: reportData }));
+
+                        const encrypted = await window.crypto.subtle.encrypt(
+                            { name: "AES-GCM", iv: iv },
+                            key,
+                            data
+                        );
+
+                        // Combine IV + Encrypted Data
+                        const buffer = new Uint8Array(iv.byteLength + encrypted.byteLength);
+                        buffer.set(iv, 0);
+                        buffer.set(new Uint8Array(encrypted), iv.byteLength);
+
+                        // Download .bin
+                        const blob = new Blob([buffer], { type: 'application/octet-stream' });
                         const url = window.URL.createObjectURL(blob);
                         const a = document.createElement('a');
                         a.style.display = 'none';
                         a.href = url;
-                        a.download = `sentinel_report_${Date.now()}.pdf`;
+                        a.download = `Trishul_report_${Date.now()}.bin`;
                         document.body.appendChild(a);
                         a.click();
                         window.URL.revokeObjectURL(url);
+
+                        // Show Key
+                        const exportedKey = await window.crypto.subtle.exportKey("raw", key);
+                        const keyHex = buf2hex(exportedKey);
+
+                        prompt("Report Encrypted! Copy this key to decrypt it later:", keyHex);
                         closeReportModal();
-                    } else {
-                        throw new Error('Server returned error');
+
+                    } catch (e) {
+                        console.error(e);
+                        alert("Encryption failed");
                     }
 
                 } catch (error) {
@@ -3487,6 +3712,146 @@ level: medium`;
                     showToast('Error creating rule', 'error');
                 }
             }
+        </script>
+        <script>
+            const translations = {
+                en: {
+                    title_Trishul: "Trishul",
+                    subtitle_ops: "Security Operations",
+                    btn_widgets: "Widgets",
+                    btn_plugin: "Plugin",
+                    btn_report: "Report",
+                    host_linux: "HOST: LINUX",
+                    system_online: "SYSTEM ONLINE",
+                    nav_dashboard: "Dashboard",
+                    nav_logs: "System Logs",
+                    nav_devices: "Device Discovery",
+                    nav_plugins: "Plugin System",
+                    nav_sigma: "Sigma Rule Editor",
+                    nav_decrypt: "Decrypt Report",
+                    nav_upload: "Upload Log",
+                    stat_threat: "Threat Level",
+                    val_threat_high: "High",
+                    stat_logs: "Total Logs",
+                    stat_online: "Online Devices",
+                    stat_alerts: "Total Alerts",
+                    chart_timeline: "Alert Timeline",
+                    chart_integrations: "Integrations & Plugins",
+                    desc_integrations: "Active external connectors",
+                    msg_no_plugins: "No plugins added yet.",
+                    th_threat_title: "Threat Title",
+                    th_severity: "Severity",
+                    th_count: "Count",
+                    sev_critical: "Critical Alert",
+                    sev_medium: "Warning Alert",
+                    sev_low: "Info Alert",
+                    chart_alerts: "Alert Distribution",
+                    chart_mitre: "MITRE ATT&CK",
+                    chart_log_source: "Log Source Distribution",
+                    title_logs: "System Logs",
+                    btn_linux: "Linux",
+                    btn_windows: "Windows",
+                    placeholder_search: "Search logs...",
+                    th_id: "ID",
+                    th_source: "Source",
+                    th_content: "Content",
+                    th_time: "Time",
+                    th_server: "Server",
+                    title_devices: "Device Discovery",
+                    subtitle_usb: "USB & Hardware",
+                    subtitle_network: "Network Devices (Servers)",
+                    btn_refresh: "Refresh",
+                    th_hostname: "Hostname",
+                    th_ip: "IP Address",
+                    th_type: "Type",
+                    th_status: "Status",
+                    th_logs: "Logs"
+                },
+                hi: {
+                    title_Trishul: "सेंटिनल",
+                    subtitle_ops: "सुरक्षा संचालन",
+                    btn_widgets: "विजेट",
+                    btn_plugin: "प्लगइन",
+                    btn_report: "रिपोर्ट",
+                    host_linux: "होस्ट: लिनक्स",
+                    system_online: "सिस्टम ऑनलाइन",
+                    nav_dashboard: "डैशबोर्ड",
+                    nav_logs: "सिस्टम लॉग",
+                    nav_devices: "डिवाइस खोज",
+                    nav_plugins: "प्लगइन सिस्टम",
+                    nav_sigma: "सिग्मा नियम संपादक",
+                    nav_decrypt: "डिक्रिप्ट रिपोर्ट",
+                    nav_upload: "लॉग अपलोड",
+                    stat_threat: "खतरा स्तर",
+                    val_threat_high: "उच्च",
+                    stat_logs: "कुल लॉग",
+                    stat_online: "ऑनलाइन डिवाइस",
+                    stat_alerts: "कुल अलर्ट",
+                    chart_timeline: "अलर्ट समयरेखा",
+                    chart_integrations: "एकीकरण और प्लगइन्स",
+                    desc_integrations: "सक्रिय बाहरी कनेक्टर",
+                    msg_no_plugins: "अभी तक कोई प्लगइन नहीं जोड़ा गया।",
+                    th_threat_title: "खतरा शीर्षक",
+                    th_severity: "गंभीरता",
+                    th_count: "गिनती",
+                    sev_critical: "गंभीर अलर्ट",
+                    sev_medium: "मध्यम अलर्ट",
+                    sev_low: "कम अलर्ट",
+                    chart_alerts: "अलर्ट वितरण",
+                    chart_mitre: "MITRE ATT&CK",
+                    chart_log_source: "लॉग स्रोत वितरण",
+                    title_logs: "सिस्टम लॉग",
+                    btn_linux: "लिनक्स",
+                    btn_windows: "विंडोज़",
+                    placeholder_search: "लॉग खोजें...",
+                    th_id: "आईडी",
+                    th_source: "स्रोत",
+                    th_content: "सामग्री",
+                    th_time: "समय",
+                    th_server: "सर्वर",
+                    title_devices: "डिवाइस खोज",
+                    subtitle_usb: "USB और हार्डवेयर",
+                    subtitle_network: "नेटवर्क डिवाइस (सर्वर)",
+                    btn_refresh: "ताज़ा करें",
+                    th_hostname: "होस्टनाम",
+                    th_ip: "आईपी पता",
+                    th_type: "प्रकार",
+                    th_status: "स्थिति",
+                    th_logs: "लॉग"
+                }
+            };
+
+            function toggleLanguageMenu() {
+                const menu = document.getElementById('language-menu');
+                menu.classList.toggle('hidden');
+            }
+
+            function setLanguage(lang) {
+                document.getElementById('current-lang').innerText = lang === 'en' ? 'EN' : 'HI';
+                const elements = document.querySelectorAll('[data-i18n]');
+                elements.forEach(el => {
+                    const key = el.getAttribute('data-i18n');
+                    if (translations[lang][key]) {
+                        if (el.tagName === 'INPUT' && el.getAttribute('placeholder')) {
+                            el.placeholder = translations[lang][key];
+                        } else {
+                            el.innerText = translations[lang][key];
+                        }
+                    }
+                });
+                // Close menu after selection
+                document.getElementById('language-menu').classList.add('hidden');
+            }
+
+            // Close menus when clicking outside
+            document.addEventListener('click', function (event) {
+                const langMenu = document.getElementById('language-menu');
+                const langBtn = event.target.closest('button[onclick="toggleLanguageMenu()"]');
+
+                if (!langBtn && !langMenu.contains(event.target)) {
+                    langMenu.classList.add('hidden');
+                }
+            });
         </script>
 </body>
 
