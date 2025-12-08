@@ -1,0 +1,27 @@
+title: Data Exfiltration Tools Usage
+id: custom-data-exfil-tools-net
+status: experimental
+description: Detects outbound connections from processes like netcat, curl, wget, or custom binaries
+references:
+  - https://attack.mitre.org/techniques/T1041/
+author: Copilot
+logsource:
+  product: linux
+  service: network
+  category: connection
+fields:
+  - process
+  - remote_address
+  - type
+detection:
+  selection:
+    process|contains:
+      - 'curl'
+      - 'wget'
+      - 'nc'
+      - 'scp'
+      - 'ftp'
+  condition: selection
+falsepositives:
+  - Legitimate file transfers
+level: high

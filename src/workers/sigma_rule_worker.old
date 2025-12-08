@@ -1,0 +1,425 @@
+"""
+Sigma Rule Worker
+
+Background worker that continuously monitors the database for new logs
+and runs Sigma rule detection, storing alerts back to the database.
+"""
+
+import time
+import threading
+import sys
+from pathlib import Path
+from typing import Dict, Any, List, Optional
+from datetime import datetime
+
+# Add src to path
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+
+from src.db.setup import SessionLocal
+from src.db.models import LogEntry, LinuxLogDetails, WindowsLogDetails, NginxLogDetails, Server, Alert
+from src.db.repository.alert_repo import create_alert
+from src.workers.sigma_rule_engine import SigmaRuleEngine
+
+
+class SigmaRuleWorker:
+    """
+    Background worker for Sigma rule detection.
+    
+    Flow:
+    1. Poll database for new unprocessed logs
+    2. Run Sigma rule matching on each log
+    3. Store alerts in alerts table
+    4. Mark logs as processed
+    5. Sleep and repeat
+    """
+    
+    def __init__(
+        self,
+        db_path: str = "./ironchad_logs.db",
+        rules_dir: str = "./Sigma_Rules",
+        poll_interval: float = 5.0,
+        batch_size: int = 100
+    ):
+        """
+        Initialize Sigma rule worker.
+        
+        Args:
+            db_path: Path to SQLite database
+            rules_dir: Path to Sigma rules directory
+            poll_interval: Seconds between database polls
+            batch_size: Max logs to process per batch
+        """
+        self.db_path = db_path
+        self.rules_dir = rules_dir
+        self.poll_interval = poll_interval
+        self.batch_size = batch_size
+        
+        self.db: Optional[DatabaseManager] = None
+        self.engine: Optional[SigmaRuleEngine] = None
+        
+        self.running = False
+        self._thread: Optional[threading.Thread] = None
+        self._last_processed_id = 0
+        self._start_time: Optional[datetime] = None
+        
+        # Statistics
+        self.stats = {
+            'logs_processed': 0,
+            'alerts_generated': 0,
+            'rules_matched': 0,
+            'errors': 0,
+            'started_at': None
+        }
+        
+        print("[SigmaWorker] Initialized")
+        print(f"  Database: {db_path}")
+        print(f"  Rules: {rules_dir}")
+        print(f"  Poll Interval: {poll_interval}s")
+        print(f"  Batch Size: {batch_size}")
+    
+    def start(self):
+        """Start worker in background thread."""
+        if self.running:
+            print("[SigmaWorker] Already running")
+            return
+        
+        self._thread = threading.Thread(target=self.run, daemon=True)
+        self._thread.start()
+        print("[SigmaWorker] Started in background thread")
+    
+    def run(self):
+        """Main worker loop."""
+        print("[SigmaWorker] Starting...")
+        
+        try:
+            # Initialize database
+            self.db = DatabaseManager(self.db_path)
+            print("[SigmaWorker] Database connected")
+            
+            # Ensure alerts table exists
+            self._init_alerts_table()
+            
+            # Initialize checkpoint: get latest log ID to start from
+            self._start_time = datetime.now()
+            self._last_processed_id = self._get_latest_log_id()
+            print(f"[SigmaWorker] Starting from log ID: {self._last_processed_id}")
+            print(f"[SigmaWorker] Will only process logs arriving after: {self._start_time}")
+            
+            # Load Sigma rules
+            self.engine = SigmaRuleEngine(self.rules_dir)
+            rules_loaded = self.engine.load_rules()
+        except Exception as e:
+            print(f"[Error] Fatal error during initialization: {e}")
+            import traceback
+            traceback.print_exc()
+            return
+        
+        if rules_loaded == 0:
+            print("[SigmaWorker] No rules loaded, worker will not process logs")
+            return
+        
+        self.running = True
+        self.stats['started_at'] = datetime.now().isoformat()
+        
+        print("[SigmaWorker] Running...")
+        
+        try:
+            while self.running:
+                # Process batch of logs
+                processed = self._process_batch()
+                
+                if processed > 0:
+                    print(f"[SigmaWorker] Processed {processed} logs, "
+                          f"{self.stats['alerts_generated']} total alerts")
+                
+                # Sleep before next poll
+                time.sleep(self.poll_interval)
+        
+        except KeyboardInterrupt:
+            print("\n[SigmaWorker] Interrupted")
+        
+        except Exception as e:
+            print(f"[SigmaWorker] Fatal error: {e}")
+            import traceback
+            traceback.print_exc()
+        
+        finally:
+            self.running = False
+            if self.db:
+                self.db.close()
+            print("[SigmaWorker] Stopped")
+    
+    def _init_alerts_table(self):
+        """Create alerts table if not exists."""
+        conn = self.db.get_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS sigma_alert (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                timestamp TEXT NOT NULL,
+                alert_id TEXT UNIQUE NOT NULL,
+                rule_id TEXT NOT NULL,
+                rule_title TEXT NOT NULL,
+                rule_description TEXT,
+                severity TEXT NOT NULL,
+                log_entry_id INTEGER NOT NULL,
+                log_type TEXT NOT NULL,
+                hostname TEXT,
+                ip_address TEXT,
+                raw_line TEXT,
+                matched_fields TEXT,
+                false_positives TEXT,
+                rule_refs TEXT,
+                acknowledged INTEGER DEFAULT 0,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (log_entry_id) REFERENCES log_entry(id)
+            )
+        ''')
+        
+        # Index for faster queries
+        cursor.execute('''
+            CREATE INDEX IF NOT EXISTS idx_alert_timestamp 
+            ON sigma_alert(timestamp DESC)
+        ''')
+        
+        cursor.execute('''
+            CREATE INDEX IF NOT EXISTS idx_alert_severity 
+            ON sigma_alert(severity)
+        ''')
+        
+        cursor.execute('''
+            CREATE INDEX IF NOT EXISTS idx_alert_log_entry 
+            ON sigma_alert(log_entry_id)
+        ''')
+        
+        conn.commit()
+        print("[SigmaWorker] Alerts table ready")
+    
+    def _get_latest_log_id(self) -> int:
+        """
+        Get the latest log ID from database to start processing from.
+        This ensures we only process NEW logs arriving after worker starts.
+        
+        Returns:
+            Latest log ID, or 0 if no logs exist
+        """
+        conn = self.db.get_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute('SELECT MAX(id) FROM log_entry')
+        result = cursor.fetchone()
+        
+        latest_id = result[0] if result[0] is not None else 0
+        return latest_id
+    
+    def _process_batch(self) -> int:
+        """
+        Process a batch of unprocessed logs.
+        
+        Returns:
+            Number of logs processed
+        """
+        # Get unprocessed logs
+        logs = self._get_unprocessed_logs()
+        
+        if not logs:
+            return 0
+        
+        processed = 0
+        
+        for log in logs:
+            try:
+                # Match against Sigma rules
+                alerts = self.engine.match_log(log)
+                
+                # Store alerts
+                if alerts:
+                    self._store_alerts(alerts)
+                    self.stats['alerts_generated'] += len(alerts)
+                    self.stats['rules_matched'] += len(alerts)
+                
+                # Update last processed ID
+                self._last_processed_id = max(self._last_processed_id, log['id'])
+                
+                processed += 1
+                self.stats['logs_processed'] += 1
+            
+            except Exception as e:
+                print(f"[SigmaWorker] Error processing log {log.get('id')}: {e}")
+                self.stats['errors'] += 1
+        
+        return processed
+    
+    def _get_unprocessed_logs(self) -> List[Dict[str, Any]]:
+        """
+        Get batch of logs that haven't been processed yet.
+        
+        Returns:
+            List of log entries
+        """
+        conn = self.db.get_connection()
+        cursor = conn.cursor()
+        
+        # Get logs newer than last processed ID
+        cursor.execute('''
+            SELECT 
+                l.id, l.timestamp, l.recv_time, l.log_type, l.raw_line, l.parsed_data,
+                s.hostname, s.ip_address
+            FROM log_entry l
+            LEFT JOIN server s ON l.server_id = s.id
+            WHERE l.id > ?
+            ORDER BY l.id ASC
+            LIMIT ?
+        ''', (self._last_processed_id, self.batch_size))
+        
+        rows = cursor.fetchall()
+        
+        logs = []
+        for row in rows:
+            log = {
+                'id': row[0],
+                'timestamp': row[1],
+                'recv_time': row[2],
+                'log_type': row[3],
+                'raw_line': row[4],
+                'parsed_data': row[5],
+                'hostname': row[6],
+                'ip_address': row[7]
+            }
+            
+            # Add type-specific details
+            log_type = log['log_type']
+            log_id = log['id']
+            
+            if log_type == 'linux':
+                cursor.execute('''
+                    SELECT facility, severity, program, pid, message
+                    FROM linux_log_details WHERE log_entry_id = ?
+                ''', (log_id,))
+                details = cursor.fetchone()
+                if details:
+                    log.update({
+                        'facility': details[0],
+                        'severity': details[1],
+                        'program': details[2],
+                        'pid': details[3],
+                        'message': details[4]
+                    })
+            
+            elif log_type == 'windows':
+                cursor.execute('''
+                    SELECT channel, event_id, message, user_name
+                    FROM windows_log_details WHERE log_entry_id = ?
+                ''', (log_id,))
+                details = cursor.fetchone()
+                if details:
+                    log.update({
+                        'channel': details[0],
+                        'event_id': details[1],
+                        'message': details[2],
+                        'user_name': details[3]
+                    })
+            
+            elif log_type == 'nginx':
+                cursor.execute('''
+                    SELECT method, path, status_code, bytes, user_agent, remote_addr
+                    FROM nginx_log_details WHERE log_entry_id = ?
+                ''', (log_id,))
+                details = cursor.fetchone()
+                if details:
+                    log.update({
+                        'method': details[0],
+                        'path': details[1],
+                        'status_code': details[2],
+                        'bytes': details[3],
+                        'user_agent': details[4],
+                        'remote_addr': details[5]
+                    })
+            
+            logs.append(log)
+        
+        return logs
+    
+    def _store_alerts(self, alerts: List[Dict[str, Any]]):
+        """Store alerts in database."""
+        conn = self.db.get_connection()
+        cursor = conn.cursor()
+        
+        for alert in alerts:
+            try:
+                import json
+                
+                cursor.execute('''
+                    INSERT OR IGNORE INTO sigma_alert (
+                        timestamp, alert_id, rule_id, rule_title, rule_description,
+                        severity, log_entry_id, log_type, hostname, ip_address,
+                        raw_line, matched_fields, false_positives, rule_refs
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ''', (
+                    alert['timestamp'],
+                    alert['alert_id'],
+                    alert['rule_id'],
+                    alert['rule_title'],
+                    alert['rule_description'],
+                    alert['severity'],
+                    alert['log_id'],
+                    alert['log_type'],
+                    alert['hostname'],
+                    alert['ip_address'],
+                    alert['raw_line'],
+                    json.dumps(alert['matched_fields']),
+                    json.dumps(alert['false_positives']),
+                    json.dumps(alert['references'])
+                ))
+            
+            except Exception as e:
+                print(f"[SigmaWorker] Error storing alert: {e}")
+        
+        conn.commit()
+    
+    def stop(self):
+        """Stop worker gracefully."""
+        self.running = False
+        print("[SigmaWorker] Stopping...")
+    
+    def is_running(self) -> bool:
+        """Check if worker is running."""
+        return self.running
+    
+    def get_stats(self) -> Dict[str, Any]:
+        """Get worker statistics."""
+        stats = self.stats.copy()
+        
+        if self.engine:
+            stats['engine'] = self.engine.get_stats()
+        
+        return stats
+
+
+# Entry point for standalone execution
+if __name__ == "__main__":
+    import signal
+    
+    def signal_handler(signum, frame):
+        print("\n[Signal] Received interrupt signal")
+        worker.stop()
+        sys.exit(0)
+    
+    # Create worker
+    worker = SigmaRuleWorker(
+        db_path="./ironchad_logs.db",
+        rules_dir="./Sigma_Rules",
+        poll_interval=5.0,
+        batch_size=100
+    )
+    
+    # Setup signal handler
+    signal.signal(signal.SIGINT, signal_handler)
+    
+    # Run
+    try:
+        worker.run()
+    except Exception as e:
+        print(f"[Error] Fatal error: {e}")
+        worker.stop()

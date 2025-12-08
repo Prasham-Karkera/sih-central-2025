@@ -1,0 +1,34 @@
+title: Nginx Local File Inclusion (LFI) Detection
+id: nginx_lfi
+status: experimental
+description: Detects attempts to include local files via URL parameters in Nginx access logs
+author: Copilot
+logsource:
+  product: nginx
+  service: webserver
+  category: web
+  definition: accesslog
+  path: access.log
+  fields: [Request, SourceIp, UserAgent]
+detection:
+  selection:
+    Request|contains:
+      - '/etc/passwd'
+      - '/proc/self/environ'
+      - '/boot.ini'
+      - '/windows/win.ini'
+      - 'file='
+      - 'include='
+      - 'php://'
+      - 'data://'
+      - 'input='
+      - 'log='
+      - 'path='
+      - 'document_root='
+      - 'base64,'
+  condition: selection
+fields:
+  - Request
+  - SourceIp
+  - UserAgent
+level: high

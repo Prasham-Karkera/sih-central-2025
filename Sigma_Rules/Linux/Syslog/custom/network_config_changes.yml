@@ -1,0 +1,22 @@
+title: Unusual Network Configuration Changes
+id: custom-network-config-change
+status: experimental
+description: Detects changes to network interfaces, routes, or firewall rules
+references:
+  - https://attack.mitre.org/techniques/T1562/
+author: Copilot
+logsource:
+  product: linux
+  service: syslog
+detection:
+  keywords:
+    - 'ifconfig '
+    - 'ip link set'
+    - 'route add'
+    - 'route del'
+    - 'iptables '
+    - 'firewalld '
+  condition: keywords
+falsepositives:
+  - Network troubleshooting
+level: medium

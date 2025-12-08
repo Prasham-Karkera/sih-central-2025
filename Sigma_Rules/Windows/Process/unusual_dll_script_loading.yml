@@ -1,0 +1,29 @@
+title: Unusual DLL or Script Loading
+id: win-proc-dll-script-load
+status: experimental
+description: Detects regsvr32.exe, rundll32.exe, or scripting hosts loading DLLs/scripts from temp, downloads, or user directories
+references:
+  - https://attack.mitre.org/techniques/T1218/
+author: Copilot
+logsource:
+  product: windows
+  service: process
+fields:
+  - name
+  - cmdline
+  - exe
+detection:
+  selection:
+    name|in:
+      - 'regsvr32.exe'
+      - 'rundll32.exe'
+      - 'wscript.exe'
+      - 'cscript.exe'
+    cmdline|contains:
+      - '\\Temp\\'
+      - '\\Downloads\\'
+      - 'C:\\Users\\'
+  condition: selection
+falsepositives:
+  - Custom scripting
+level: high

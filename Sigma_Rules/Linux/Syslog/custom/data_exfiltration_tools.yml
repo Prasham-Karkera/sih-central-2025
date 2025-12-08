@@ -1,0 +1,20 @@
+title: Data Exfiltration Tools Usage
+id: custom-data-exfil-tools
+status: experimental
+description: Detects use of common data exfiltration tools (netcat, curl, wget)
+references:
+  - https://attack.mitre.org/techniques/T1041/
+author: Copilot
+logsource:
+  product: linux
+  service: syslog
+detection:
+  keywords:
+    - 'nc '
+    - 'netcat '
+    - 'curl '
+    - 'wget '
+  condition: keywords
+falsepositives:
+  - Admin troubleshooting
+level: high

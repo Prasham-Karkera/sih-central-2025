@@ -1,0 +1,28 @@
+title: Nginx Cross-Site Scripting (XSS) Attempt
+id: nginx-xss-001
+status: experimental
+description: Detects XSS attempts in Nginx access logs
+references:
+  - https://owasp.org/www-community/attacks/xss/
+author: Sachin1785
+logsource:
+  product: web
+  service: nginx
+  category: webserver
+detection:
+  selection:
+    Url|contains:
+      - "<script>"
+      - "%3Cscript%3E"
+      - "javascript:"
+      - "onerror="
+      - "onload="
+      - "<img src="
+      - "<svg/on"
+      - "<iframe"
+      - "document.cookie"
+      - "alert(" 
+  condition: selection
+falsepositives:
+  - Penetration testing
+level: high

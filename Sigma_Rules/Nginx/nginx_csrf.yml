@@ -1,0 +1,26 @@
+title: Nginx CSRF Attempt Detection
+id: nginx_csrf
+status: experimental
+description: Detects suspicious requests that may indicate CSRF attempts in Nginx access logs
+author: Copilot
+logsource:
+  product: nginx
+  service: webserver
+  category: web
+  definition: accesslog
+  path: access.log
+  fields: [Request, SourceIp, Referer, UserAgent]
+detection:
+  selection:
+    Request|contains:
+      - 'POST'
+      - 'PUT'
+      - 'DELETE'
+    Referer|empty: true
+  condition: selection
+fields:
+  - Request
+  - SourceIp
+  - Referer
+  - UserAgent
+level: medium

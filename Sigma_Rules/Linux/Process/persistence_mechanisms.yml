@@ -1,0 +1,26 @@
+title: Persistence Mechanisms
+id: proc-persistence
+status: experimental
+description: Detects processes related to cron jobs, systemd services, or startup scripts
+references:
+  - https://attack.mitre.org/techniques/T1053/
+author: Copilot
+logsource:
+  product: linux
+  service: process
+fields:
+  - name
+  - cmdline
+  - exe
+detection:
+  selection:
+    cmdline|contains:
+      - 'cron'
+      - 'systemd'
+      - '/etc/init.d/'
+      - '/etc/rc.local'
+      - '/etc/cron.'
+  condition: selection
+falsepositives:
+  - System maintenance
+level: medium

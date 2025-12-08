@@ -1,0 +1,28 @@
+title: Network-Connected Non-Network Processes
+id: win-proc-nonnet-net
+status: experimental
+description: Detects applications not typically associated with network activity establishing network connections
+references:
+  - https://attack.mitre.org/techniques/T1105/
+author: Copilot
+logsource:
+  product: windows
+  service: process
+fields:
+  - name
+  - cmdline
+  - exe
+detection:
+  selection:
+    name|in:
+      - 'notepad.exe'
+      - 'calc.exe'
+      - 'wordpad.exe'
+    cmdline|contains:
+      - 'http'
+      - 'ftp'
+      - 'tcp'
+  condition: selection
+falsepositives:
+  - Custom automation
+level: high

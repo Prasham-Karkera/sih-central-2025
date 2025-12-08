@@ -1,0 +1,20 @@
+title: Suspicious Mount or Device Activity
+id: custom-mount-device
+status: experimental
+description: Detects mounting of external devices or loop devices
+references:
+  - https://attack.mitre.org/techniques/T1091/
+author: Copilot
+logsource:
+  product: linux
+  service: syslog
+detection:
+  keywords:
+    - 'mount /dev/'
+    - 'mount -o loop'
+    - 'umount /dev/'
+    - 'losetup '
+  condition: keywords
+falsepositives:
+  - Admin maintenance
+level: medium

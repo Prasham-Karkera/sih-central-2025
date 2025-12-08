@@ -1,0 +1,25 @@
+title: IPv6 Tunneling or Abuse
+id: custom-ipv6-tunnel
+status: experimental
+description: Detects unexpected IPv6 traffic in IPv4-only environments
+references:
+  - https://attack.mitre.org/techniques/T1090/003/
+author: Copilot
+logsource:
+  product: linux
+  service: network
+  category: connection
+fields:
+  - process
+  - local_address
+  - remote_address
+  - type
+  - timestamp
+detection:
+  selection:
+    local_address|contains: ':'
+    remote_address|contains: ':'
+  condition: selection
+falsepositives:
+  - Legitimate IPv6 use
+level: medium

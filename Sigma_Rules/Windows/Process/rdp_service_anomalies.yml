@@ -1,0 +1,29 @@
+title: Remote Desktop Service Anomalies
+id: win-proc-rdp-anomaly
+status: experimental
+description: Detects mstsc.exe or rdpclip.exe started by non-interactive users or with unexpected parent processes
+references:
+  - https://attack.mitre.org/techniques/T1021/001/
+author: Copilot
+logsource:
+  product: windows
+  service: process
+fields:
+  - name
+  - parent
+  - user
+detection:
+  selection:
+    name|in:
+      - 'mstsc.exe'
+      - 'rdpclip.exe'
+    user|not_in:
+      - 'Administrator'
+      - 'SYSTEM'
+    parent|not_in:
+      - 'explorer.exe'
+      - 'winlogon.exe'
+  condition: selection
+falsepositives:
+  - Remote support
+level: medium

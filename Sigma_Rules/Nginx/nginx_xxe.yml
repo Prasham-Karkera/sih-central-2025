@@ -1,0 +1,29 @@
+title: Nginx XML External Entity (XXE) Detection
+id: nginx_xxe
+status: experimental
+description: Detects requests with XML payloads or DTD references in Nginx access logs
+author: Copilot
+logsource:
+  product: nginx
+  service: webserver
+  category: web
+  definition: accesslog
+  path: access.log
+  fields: [Request, SourceIp, UserAgent]
+detection:
+  selection:
+    Request|contains:
+      - '<!DOCTYPE'
+      - '<!ENTITY'
+      - 'SYSTEM "file://'
+      - 'SYSTEM "http://'
+      - 'SYSTEM "ftp://'
+      - 'xml version="'
+      - 'application/xml'
+      - 'text/xml'
+  condition: selection
+fields:
+  - Request
+  - SourceIp
+  - UserAgent
+level: high

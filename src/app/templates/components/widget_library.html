@@ -1,0 +1,31 @@
+<!-- Widget Library Modal -->
+<div id="widget-library"
+    class="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm hidden">
+    <div class="panel p-6 rounded-lg w-full max-w-2xl flex flex-col gap-4 shadow-2xl relative">
+        <div class="flex justify-between items-center border-b border-white/10 pb-4">
+            <h3 class="font-display font-bold text-xl">Widget Library</h3>
+            <div class="flex gap-2">
+                <button onclick="resetLayout()"
+                    class="px-3 py-1 rounded bg-red-500/10 text-red-600 dark:bg-red-500/20 dark:text-red-500 hover:bg-red-500/20 dark:hover:bg-red-500/30 transition text-xs font-mono">
+                    <i class="fas fa-undo"></i> Reset Layout
+                </button>
+                <button onclick="restoreSelectedWidgets()"
+                    class="px-3 py-1 rounded bg-green-500/10 text-green-600 dark:bg-green-500/20 dark:text-green-500 hover:bg-green-500/20 dark:hover:bg-green-500/30 transition text-xs font-mono">
+                    <i class="fas fa-check"></i> Restore Selected
+                </button>
+                <button onclick="toggleWidgetLibrary()" class="opacity-60 hover:opacity-100 transition">
+                    <i class="fas fa-times text-lg"></i>
+                </button>
+            </div>
+        </div>
+        <div class="text-xs font-mono opacity-60">
+            Select widgets to add back to your dashboard.
+        </div>
+        <div id="removed-widgets-list" class="grid grid-cols-2 gap-4 max-h-96 overflow-y-auto custom-scrollbar p-2">
+            <!-- Removed widgets will appear here -->
+            <div class="col-span-2 text-center py-8 opacity-40 italic">
+                All widgets are currently active.
+            </div>
+        </div>
+    </div>
+</div>

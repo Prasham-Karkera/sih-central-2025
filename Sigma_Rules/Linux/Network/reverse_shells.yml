@@ -1,0 +1,28 @@
+title: Reverse Shell Activity
+id: custom-reverse-shells
+status: experimental
+description: Detects shell processes making outbound connections (reverse shells)
+references:
+  - https://attack.mitre.org/techniques/T1059/
+author: Copilot
+logsource:
+  product: linux
+  service: network
+  category: connection
+fields:
+  - process
+  - remote_address
+  - type
+detection:
+  selection:
+    process|contains:
+      - 'bash'
+      - 'sh'
+      - 'zsh'
+    remote_address|not_in:
+      - 127.0.0.1
+      - '::1'
+  condition: selection
+falsepositives:
+  - Remote admin scripts
+level: high

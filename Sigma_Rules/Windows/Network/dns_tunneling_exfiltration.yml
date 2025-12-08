@@ -1,0 +1,29 @@
+title: DNS Tunneling or Exfiltration
+id: win-dns-tunnel
+status: experimental
+description: Detects high-volume or suspicious DNS queries (potential tunneling or exfiltration)
+references:
+  - https://attack.mitre.org/techniques/T1048/
+author: Copilot
+logsource:
+  product: windows
+  service: network
+  category: dns
+fields:
+  - process
+  - remote_ip
+  - type
+  - query
+  - count
+  - timestamp
+detection:
+  selection:
+    query|contains:
+      - '.xyz'
+      - '.top'
+      - '.tk'
+    count|gte: 100
+  condition: selection
+falsepositives:
+  - Legitimate high-volume DNS
+level: high

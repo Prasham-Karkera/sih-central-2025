@@ -1,0 +1,20 @@
+title: Lateral Movement via SSH
+id: custom-lateral-ssh
+status: experimental
+description: Detects unusual SSH logins or remote execution attempts
+references:
+  - https://attack.mitre.org/techniques/T1021/004/
+author: Copilot
+logsource:
+  product: linux
+  service: syslog
+detection:
+  keywords:
+    - 'sshd: Accepted password for'
+    - 'sshd: Accepted publickey for'
+    - 'sshd: Failed password for'
+    - 'sshd: Connection from'
+  condition: keywords
+falsepositives:
+  - Normal user logins
+level: medium

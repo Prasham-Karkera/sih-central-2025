@@ -1,0 +1,29 @@
+title: Nginx Sensitive Data Exposure Detection
+id: nginx_sensitive_data_exposure
+status: experimental
+description: Detects requests for sensitive files like .env, .git, .htaccess, or backup files in Nginx access logs
+author: Copilot
+logsource:
+  product: nginx
+  service: webserver
+  category: web
+  definition: accesslog
+  path: access.log
+  fields: [Request, SourceIp, UserAgent]
+detection:
+  selection:
+    Request|contains:
+      - '.env'
+      - '.git'
+      - '.htaccess'
+      - '.bak'
+      - '.backup'
+      - 'config.php'
+      - 'web.config'
+      - 'db_backup'
+  condition: selection
+fields:
+  - Request
+  - SourceIp
+  - UserAgent
+level: high

@@ -1,0 +1,30 @@
+title: Nginx Host Header Attack Detection
+id: nginx_host_header_attack
+status: experimental
+description: Detects manipulation of Host header for cache poisoning or SSRF in Nginx access logs
+author: Copilot
+logsource:
+  product: nginx
+  service: webserver
+  category: web
+  definition: accesslog
+  path: access.log
+  fields: [Request, SourceIp, Host, UserAgent]
+detection:
+  selection:
+    Host|contains:
+      - '127.0.0.1'
+      - 'localhost'
+      - 'internal'
+      - 'admin'
+      - 'metadata.google.internal'
+      - '169.254.169.254'
+      - 'evil.com'
+      - 'attacker.com'
+  condition: selection
+fields:
+  - Request
+  - SourceIp
+  - Host
+  - UserAgent
+level: high

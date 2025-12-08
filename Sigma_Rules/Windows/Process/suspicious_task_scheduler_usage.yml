@@ -1,0 +1,28 @@
+title: Suspicious Task Scheduler Usage
+id: win-proc-task-sched
+status: experimental
+description: Detects schtasks.exe or at.exe creating or running tasks with unusual or obfuscated command lines
+references:
+  - https://attack.mitre.org/techniques/T1053/
+author: Copilot
+logsource:
+  product: windows
+  service: process
+fields:
+  - name
+  - cmdline
+detection:
+  selection:
+    name|in:
+      - 'schtasks.exe'
+      - 'at.exe'
+    cmdline|contains:
+      - '/create'
+      - '/run'
+      - 'powershell'
+      - 'cmd.exe'
+      - 'base64'
+  condition: selection
+falsepositives:
+  - Admin automation
+level: high

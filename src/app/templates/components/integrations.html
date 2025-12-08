@@ -1,0 +1,40 @@
+<!-- 3rd Party Integrations (Below Topology) -->
+<div id="widget-integrations" draggable="true" class="panel p-6 rounded-lg draggable-widget">
+    <div class="widget-remove-btn" onclick="removeWidget('widget-integrations')"><i class="fas fa-times"></i></div>
+    <div class="flex justify-between items-center mb-6">
+        <div>
+            <h3 class="font-display font-bold text-lg">Integrations & Plugins</h3>
+            <p class="text-xs opacity-60 mt-1">Manage external security connectors</p>
+        </div>
+    </div>
+    <div id="integrations-grid" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+        <!-- Active Integrations -->
+        <div
+            class="panel bg-white/5 border border-white/10 p-4 rounded-lg flex flex-col items-center gap-3 group cursor-pointer hover:bg-white/10 transition-all relative overflow-hidden">
+            <div class="absolute top-2 right-2 w-2 h-2 rounded-full bg-green-500"></div>
+            <i class="fab fa-aws text-3xl opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-all"></i>
+            <span class="text-xs font-mono font-bold">AWS Guard</span>
+        </div>
+        <div
+            class="panel bg-white/5 border border-white/10 p-4 rounded-lg flex flex-col items-center gap-3 group cursor-pointer hover:bg-white/10 transition-all relative overflow-hidden">
+            <div class="absolute top-2 right-2 w-2 h-2 rounded-full bg-green-500"></div>
+            <i
+                class="fab fa-slack text-3xl opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-all"></i>
+            <span class="text-xs font-mono font-bold">Slack Ops</span>
+        </div>
+        <div
+            class="panel bg-white/5 border border-white/10 p-4 rounded-lg flex flex-col items-center gap-3 group cursor-pointer hover:bg-white/10 transition-all relative overflow-hidden">
+            <div class="absolute top-2 right-2 w-2 h-2 rounded-full bg-green-500"></div>
+            <i class="fab fa-jira text-3xl opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-all"></i>
+            <span class="text-xs font-mono font-bold">Jira Ticket</span>
+        </div>
+        <div
+            class="panel bg-white/5 border border-white/10 p-4 rounded-lg flex flex-col items-center gap-3 group cursor-pointer hover:bg-white/10 transition-all relative overflow-hidden">
+            <div class="absolute top-2 right-2 w-2 h-2 rounded-full bg-yellow-500"></div>
+            <i
+                class="fab fa-github text-3xl opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-all"></i>
+            <span class="text-xs font-mono font-bold">Git Audit</span>
+        </div>
+
+    </div>
+</div>

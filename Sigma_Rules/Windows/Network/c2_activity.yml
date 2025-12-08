@@ -1,0 +1,23 @@
+title: Command and Control (C2) Activity
+id: win-c2-activity
+status: experimental
+description: Detects persistent connections to known C2 infrastructure or suspicious remote addresses
+references:
+  - https://attack.mitre.org/techniques/T1071/
+author: Copilot
+logsource:
+  product: windows
+  service: network
+  category: connection
+fields:
+  - remote_ip
+  - process
+  - pid
+detection:
+  selection:
+    remote_ip|ip_in:
+      - '<KNOWN_C2_IPS>'
+  condition: selection
+falsepositives:
+  - Security testing
+level: critical

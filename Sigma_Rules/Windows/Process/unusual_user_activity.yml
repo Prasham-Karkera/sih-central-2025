@@ -1,0 +1,25 @@
+title: Unusual User Activity
+id: win-proc-unusual-user
+status: experimental
+description: Detects processes started by unexpected users
+references:
+  - https://attack.mitre.org/techniques/T1078/
+author: Copilot
+logsource:
+  product: windows
+  service: process
+fields:
+  - name
+  - user
+  - cmdline
+detection:
+  selection:
+    user|not_in:
+      - 'SYSTEM'
+      - 'Administrator'
+      - 'LOCAL SERVICE'
+      - 'NETWORK SERVICE'
+  condition: selection
+falsepositives:
+  - Application users
+level: medium

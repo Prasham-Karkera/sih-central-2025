@@ -1,0 +1,33 @@
+title: Nginx Automated Tools/Scanners Detection
+id: nginx_automated_tools
+status: experimental
+description: Detects requests with user agents or patterns matching known tools (e.g., sqlmap, Nikto) in Nginx access logs
+author: Copilot
+logsource:
+  product: nginx
+  service: webserver
+  category: web
+  definition: accesslog
+  path: access.log
+  fields: [Request, SourceIp, UserAgent]
+detection:
+  selection:
+    UserAgent|contains:
+      - 'sqlmap'
+      - 'nikto'
+      - 'acunetix'
+      - 'wpscan'
+      - 'nmap'
+      - 'fuzz'
+      - 'scanner'
+      - 'dirbuster'
+      - 'burp'
+      - 'zaproxy'
+      - 'crawler'
+      - 'bot'
+  condition: selection
+fields:
+  - Request
+  - SourceIp
+  - UserAgent
+level: medium

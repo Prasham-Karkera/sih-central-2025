@@ -1,0 +1,22 @@
+title: Suspicious Binary Execution
+id: custom-suspicious-binary-exec
+status: experimental
+description: Detects execution of binaries from non-standard locations or interpreters with suspicious scripts
+references:
+  - https://attack.mitre.org/techniques/T1204/
+author: Copilot
+logsource:
+  product: linux
+  service: syslog
+detection:
+  keywords:
+    - '/tmp/'
+    - '/dev/shm/'
+    - 'python '
+    - 'perl '
+    - 'bash '
+    - 'sh '
+  condition: keywords
+falsepositives:
+  - Admin troubleshooting
+level: high

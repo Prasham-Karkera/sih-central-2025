@@ -1,0 +1,32 @@
+title: Unencrypted Sensitive Protocols
+id: win-unencrypted-protocols
+status: experimental
+description: Detects use of unencrypted protocols (FTP, Telnet, HTTP) for sensitive data transfer
+references:
+  - https://attack.mitre.org/techniques/T1040/
+author: Copilot
+logsource:
+  product: windows
+  service: network
+  category: connection
+fields:
+  - process
+  - local_port
+  - remote_ip
+  - type
+  - timestamp
+detection:
+  selection:
+    local_port|in:
+      - 21
+      - 23
+      - 80
+    process|contains:
+      - 'ftp.exe'
+      - 'telnet.exe'
+      - 'curl.exe'
+      - 'wget.exe'
+  condition: selection
+falsepositives:
+  - Non-sensitive transfers
+level: medium

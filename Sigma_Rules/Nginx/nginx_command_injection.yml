@@ -1,0 +1,31 @@
+title: Nginx Command Injection Attempt
+id: nginx-command-injection-001
+status: experimental
+description: Detects command injection attempts in Nginx access logs
+references:
+  - https://owasp.org/www-community/attacks/Command_Injection
+author: Sachin1785
+logsource:
+  product: web
+  service: nginx
+  category: webserver
+detection:
+  selection:
+    Url|contains:
+      - ";cat%20"
+      - ";ls%20"
+      - ";id%20"
+      - ";wget%20"
+      - ";curl%20"
+      - "%7Ccat%20"
+      - "%7Cls%20"
+      - "$(cat"
+      - "`cat"
+      - "&cat%20"
+      - "/etc/passwd"
+      - "/bin/bash"
+      - "cmd.exe"
+  condition: selection
+falsepositives:
+  - Penetration testing
+level: high

@@ -1,0 +1,26 @@
+title: Lateral Movement via Remote Execution
+id: custom-lateral-remote-exec
+status: experimental
+description: Detects connections from system management tools to other internal systems
+references:
+  - https://attack.mitre.org/techniques/T1021/
+author: Copilot
+logsource:
+  product: linux
+  service: network
+  category: connection
+fields:
+  - process
+  - remote_address
+  - type
+detection:
+  selection:
+    process|contains:
+      - 'ssh'
+      - 'rdp'
+      - 'smbclient'
+      - 'winexe'
+  condition: selection
+falsepositives:
+  - Legitimate admin activity
+level: medium

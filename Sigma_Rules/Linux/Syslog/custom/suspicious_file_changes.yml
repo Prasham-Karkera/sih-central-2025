@@ -1,0 +1,21 @@
+title: Suspicious File or Directory Changes
+id: custom-suspicious-file-changes
+status: experimental
+description: Detects creation of hidden files or changes to critical system files
+references:
+  - https://attack.mitre.org/techniques/T1074/
+author: Copilot
+logsource:
+  product: linux
+  service: syslog
+detection:
+  keywords:
+    - 'chmod 777 '
+    - 'chown root '
+    - 'touch .'
+    - 'mv /etc/passwd'
+    - 'mv /etc/shadow'
+  condition: keywords
+falsepositives:
+  - Admin maintenance
+level: high

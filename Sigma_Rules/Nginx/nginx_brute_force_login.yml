@@ -1,0 +1,25 @@
+title: Nginx Brute Force Login Attempt
+id: nginx-brute-force-login-001
+status: experimental
+description: Detects brute force login attempts in Nginx access logs
+references:
+  - https://owasp.org/www-community/attacks/Brute_force_attack
+author: Sachin1785
+logsource:
+  product: web
+  service: nginx
+  category: webserver
+detection:
+  selection:
+    Url|contains:
+      - "/login"
+      - "/wp-login.php"
+      - "/admin/login"
+    ResponseCode:
+      - "401"
+      - "403"
+      - "429"
+  condition: selection
+falsepositives:
+  - Legitimate failed logins
+level: medium

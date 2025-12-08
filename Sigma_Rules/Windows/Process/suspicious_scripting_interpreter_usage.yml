@@ -1,0 +1,29 @@
+title: Suspicious Scripting or Interpreter Usage
+id: win-proc-susp-script
+status: experimental
+description: Detects execution of powershell.exe, cscript.exe, wscript.exe, or other interpreters with suspicious scripts or arguments
+references:
+  - https://attack.mitre.org/techniques/T1059/
+author: Copilot
+logsource:
+  product: windows
+  service: process
+fields:
+  - name
+  - cmdline
+  - exe
+detection:
+  selection:
+    name|in:
+      - 'powershell.exe'
+      - 'cscript.exe'
+      - 'wscript.exe'
+    cmdline|contains:
+      - 'eval('
+      - 'base64'
+      - 'IEX'
+      - 'DownloadString'
+  condition: selection
+falsepositives:
+  - Automation scripts
+level: medium

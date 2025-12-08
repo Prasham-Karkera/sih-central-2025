@@ -1,0 +1,24 @@
+title: Unusual Outbound Connections
+id: custom-unusual-outbound
+status: experimental
+description: Detects outbound connections to rare or foreign IPs (potential exfiltration or C2)
+references:
+  - https://attack.mitre.org/techniques/T1041/
+author: Copilot
+logsource:
+  product: linux
+  service: network
+  category: connection
+fields:
+  - remote_address
+  - process
+  - type
+  - pid
+detection:
+  selection:
+    remote_address|ip_in:
+      - '<RARE_OR_FOREIGN_IPS>'
+  condition: selection
+falsepositives:
+  - Legitimate remote admin
+level: high

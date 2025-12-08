@@ -1,0 +1,25 @@
+title: Nginx HTTP Response Splitting Detection
+id: nginx_http_response_splitting
+status: experimental
+description: Detects malformed headers or CRLF injection attempts in Nginx access logs
+author: Copilot
+logsource:
+  product: nginx
+  service: webserver
+  category: web
+  definition: accesslog
+  path: access.log
+  fields: [Request, SourceIp, UserAgent]
+detection:
+  selection:
+    Request|contains:
+      - '%0d%0a'
+      - '\r\n'
+      - 'Set-Cookie:'
+      - 'Location:'
+  condition: selection
+fields:
+  - Request
+  - SourceIp
+  - UserAgent
+level: medium

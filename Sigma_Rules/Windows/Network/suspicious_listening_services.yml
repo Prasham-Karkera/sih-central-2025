@@ -1,0 +1,32 @@
+title: Suspicious Listening Services
+id: win-suspicious-listen
+status: experimental
+description: Detects unexpected processes listening on non-standard ports (potential backdoors or malware)
+references:
+  - https://attack.mitre.org/techniques/T1043/
+author: Copilot
+logsource:
+  product: windows
+  service: network
+  category: connection
+fields:
+  - local_port
+  - process
+  - pid
+detection:
+  selection:
+    local_port|not_in:
+      - 3389
+      - 445
+      - 80
+      - 443
+      - 135
+      - 139
+    process|not_in:
+      - 'svchost.exe'
+      - 'lsass.exe'
+      - 'System'
+  condition: selection
+falsepositives:
+  - Custom application ports
+level: high

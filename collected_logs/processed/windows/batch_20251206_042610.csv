@@ -1,0 +1,31 @@
+hostname,EventID,LogName,TimeCreated,EventRecordID,Level,Computer,message,src_ip,recv_time,Subject_Security_ID,Subject_Account_Name,Subject_Account_Domain,LogonInformation_Logon_Type,LogonInformation_Restricted_Admin_Mode,LogonInformation_User,LogonInformation_Logon_Process,cmdline,name,parent,user,target_file,image,timestamp,channel,event_id,level,TargetDomainName,TargetSid,SubjectUserSid,subject_user,SubjectDomainName,SubjectLogonId,CallerProcessId,process_name,Subject_Logon_ID,Group_Security_ID,Group_Group_Name,Group_Group_Domain,ProcessInformation_Process_ID,ProcessInformation_Process_Name,parent_name,process_basename
+WIN-SERVER01,4624,Security,2024-12-04T10:30:45.123Z,12345,Information,WIN-SERVER01.domain.local,"An account was successfully logged on.
+
+Subject:
+	Security ID: S-1-5-18
+	Account Name: SYSTEM
+	Account Domain: NT AUTHORITY
+
+Logon Information:
+	Logon Type: 3
+	Restricted Admin Mode: -
+	User: john.doe
+	Logon Process: NtLmSsp",10.0.0.50,2024-12-04T10:00:00,S-1-5-18,SYSTEM,NT AUTHORITY,3,-,john.doe,NtLmSsp,,,,,,,,,,,,,,,,,,,,,,,,,,
+WIN-WORKSTATION02,4688,Security,2024-12-04T11:15:30.456Z,,,,,10.0.0.50,2024-12-04T10:00:00,,,,,,,,powershell.exe -NoProfile -ExecutionPolicy Bypass,C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe,C:\Windows\System32\cmd.exe,administrator,,,,,,,,,,,,,,powershell.exe,,,,,,,cmd.exe,powershell.exe
+WIN-FILESERVER,5145,Security,2024-12-04T14:20:10.789Z,,,,,10.0.0.50,2024-12-04T10:00:00,,,,,,,,,,,bob.smith,C:\Data\confidential.docx,C:\Windows\explorer.exe,,,,,,,,,,,,,,,,,,,,
+HP-LAP704,,,,,,,"A security-enabled local group membership was enumerated.
+
+Subject:
+	Security ID:		S-1-5-21-64021822-3933034794-494143053-1009
+	Account Name:		Harsh
+	Account Domain:		HP-LAP704
+	Logon ID:		0xC4589
+
+Group:
+	Security ID:		S-1-5-32-544
+	Group Name:		Administrators
+	Group Domain:		Builtin
+
+Process Information:
+	Process ID:		0x278c
+	Process Name:		C:\Windows\System32\taskhostw.exe",10.0.0.50,2024-12-04T10:00:00,S-1-5-21-64021822-3933034794-494143053-1009,Harsh,HP-LAP704,,,,,,,,Administrators,,,2025-12-06 04:06:30,Security,4799,Information,Builtin,S-1-5-32-544,S-1-5-21-64021822-3933034794-494143053-1009,Harsh,HP-LAP704,0xc4589,0x278c,,0xC4589,S-1-5-32-544,Administrators,Builtin,0x278c,C:\Windows\System32\taskhostw.exe,,

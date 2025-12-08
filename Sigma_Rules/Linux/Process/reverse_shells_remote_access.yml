@@ -1,0 +1,31 @@
+title: Reverse Shells and Remote Access Tools
+id: proc-reverse-shell
+status: experimental
+description: Detects shell processes with network-related command lines or suspicious parents
+references:
+  - https://attack.mitre.org/techniques/T1059/001/
+author: Copilot
+logsource:
+  product: linux
+  service: process
+fields:
+  - name
+  - cmdline
+  - parent
+detection:
+  selection:
+    name|in:
+      - 'bash'
+      - 'sh'
+      - 'zsh'
+    cmdline|contains:
+      - 'nc '
+      - 'curl '
+      - 'wget '
+      - '/dev/tcp/'
+      - '0<&'
+      - 'exec '
+  condition: selection
+falsepositives:
+  - Penetration testing
+level: high

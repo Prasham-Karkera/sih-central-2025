@@ -1,0 +1,24 @@
+title: DHCP Attacks
+id: win-dhcp-attack
+status: experimental
+description: Detects rogue DHCP server responses or multiple DHCP offers
+references:
+  - https://attack.mitre.org/techniques/T1206/
+author: Copilot
+logsource:
+  product: windows
+  service: network
+  category: dhcp
+fields:
+  - source_ip
+  - message_type
+  - timestamp
+detection:
+  selection:
+    message_type|contains:
+      - 'DHCPOFFER'
+    source_ip|count|gte: 2
+  condition: selection
+falsepositives:
+  - DHCP failover
+level: high

@@ -1,0 +1,30 @@
+title: Nginx Open Redirect Detection
+id: nginx_open_redirect
+status: experimental
+description: Detects requests with suspicious redirect parameters in Nginx access logs
+author: Copilot
+logsource:
+  product: nginx
+  service: webserver
+  category: web
+  definition: accesslog
+  path: access.log
+  fields: [Request, SourceIp, UserAgent]
+detection:
+  selection:
+    Request|contains:
+      - 'redirect='
+      - 'url='
+      - 'next='
+      - 'return='
+      - 'to='
+      - 'target='
+      - 'dest='
+      - 'continue='
+      - 'callback='
+  condition: selection
+fields:
+  - Request
+  - SourceIp
+  - UserAgent
+level: medium

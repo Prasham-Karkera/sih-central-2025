@@ -1,0 +1,20 @@
+title: Suspicious Scheduled Task Creation
+id: custom-scheduled-task
+status: experimental
+description: Detects creation of unusual or hidden cron/at jobs
+references:
+  - https://attack.mitre.org/techniques/T1053/
+author: Copilot
+logsource:
+  product: linux
+  service: syslog
+detection:
+  keywords:
+    - 'crontab -e'
+    - 'crontab -l'
+    - 'at ' # at job creation
+    - 'new cron job'
+  condition: keywords
+falsepositives:
+  - Admin maintenance
+level: medium

@@ -1,0 +1,20 @@
+title: Time Manipulation
+id: custom-time-manipulation
+status: experimental
+description: Detects changes to system time or NTP service tampering
+references:
+  - https://attack.mitre.org/techniques/T1070/006/
+author: Copilot
+logsource:
+  product: linux
+  service: syslog
+detection:
+  keywords:
+    - 'date set '
+    - 'timedatectl set-time'
+    - 'ntpd: time set'
+    - 'ntpdate '
+  condition: keywords
+falsepositives:
+  - Time synchronization
+level: medium

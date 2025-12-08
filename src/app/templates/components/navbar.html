@@ -1,0 +1,61 @@
+<!-- Navigation -->
+<nav
+    class="fixed top-0 w-full z-50 panel border-b-0 border-b border-white/10 px-6 py-4 flex justify-between items-center h-16">
+    <div class="flex items-center gap-3">
+        <div
+            class="w-8 h-8 bg-black dark:bg-white text-white dark:text-black rounded flex items-center justify-center font-bold font-display text-lg">
+            S</div>
+        <div class="flex flex-col">
+            <span class="font-display font-bold text-lg tracking-tight leading-none uppercase">Sentinel</span>
+            <span class="text-[10px] font-mono opacity-60 tracking-widest uppercase">Security Operations</span>
+        </div>
+    </div>
+
+    <div class="flex items-center gap-6">
+        <div class="hidden md:flex items-center gap-4 text-xs font-mono opacity-60">
+            <span class="flex items-center gap-2 border-r border-current/20 pr-4">
+                <i class="fab fa-linux text-lg"></i>
+                <span>HOST: LINUX</span>
+            </span>
+            <div class="relative group">
+                <button onclick="toggleTimeZoneMenu()"
+                    class="hover:text-white transition-colors flex items-center gap-2">
+                    <span id="clock">00:00:00 UTC</span>
+                    <i class="fas fa-chevron-down text-[10px] opacity-50"></i>
+                </button>
+                <div id="timezone-menu"
+                    class="hidden absolute top-full left-1/2 transform -translate-x-1/2 mt-2 w-32 bg-white dark:bg-black border border-gray-200 dark:border-white/10 rounded shadow-xl z-50 flex flex-col overflow-hidden text-gray-800 dark:text-gray-200">
+                    <button onclick="setTimeZone('UTC')"
+                        class="px-3 py-2 text-left hover:bg-gray-100 dark:hover:bg-white/10 transition text-[10px]">UTC
+                        (Universal)</button>
+                    <button onclick="setTimeZone('Asia/Kolkata')"
+                        class="px-3 py-2 text-left hover:bg-gray-100 dark:hover:bg-white/10 transition text-[10px]">IST
+                        (India)</button>
+                    <button onclick="setTimeZone('America/New_York')"
+                        class="px-3 py-2 text-left hover:bg-gray-100 dark:hover:bg-white/10 transition text-[10px]">EST
+                        (New York)</button>
+                    <button onclick="setTimeZone('Europe/London')"
+                        class="px-3 py-2 text-left hover:bg-gray-100 dark:hover:bg-white/10 transition text-[10px]">GMT
+                        (London)</button>
+                    <button onclick="setTimeZone('Asia/Tokyo')"
+                        class="px-3 py-2 text-left hover:bg-gray-100 dark:hover:bg-white/10 transition text-[10px]">JST
+                        (Tokyo)</button>
+                </div>
+            </div>
+            <span>•</span>
+            <span class="flex items-center gap-1">
+                <div class="w-1.5 h-1.5 rounded-full bg-green-500"></div> SYSTEM ONLINE
+            </span>
+        </div>
+
+        <div class="h-4 w-[1px] bg-current opacity-20"></div>
+
+        <button onclick="toggleTheme()" class="opacity-60 hover:opacity-100 transition-opacity">
+            <i class="fas fa-adjust text-lg"></i>
+        </button>
+        <button onclick="lockSession()" class="opacity-60 hover:opacity-100 transition-opacity ml-4"
+            title="Lock Session">
+            <i class="fas fa-lock text-lg"></i>
+        </button>
+    </div>
+</nav>

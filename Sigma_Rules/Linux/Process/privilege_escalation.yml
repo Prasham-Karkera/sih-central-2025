@@ -1,0 +1,27 @@
+title: Privilege Escalation via Unusual Process
+id: proc-priv-esc
+status: experimental
+description: Detects processes running as root or with unusual parent-child relationships
+references:
+  - https://attack.mitre.org/techniques/T1068/
+author: Copilot
+logsource:
+  product: linux
+  service: process
+fields:
+  - name
+  - user
+  - parent
+  - ppid
+detection:
+  selection:
+    user: 'root'
+    parent|in:
+      - 'nginx'
+      - 'apache2'
+      - 'www-data'
+      - 'nobody'
+  condition: selection
+falsepositives:
+  - Legitimate root processes
+level: high

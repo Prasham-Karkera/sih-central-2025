@@ -1,0 +1,28 @@
+title: Nginx Misconfigured CORS Detection
+id: nginx_cors_misconfig
+status: experimental
+description: Detects requests exploiting CORS misconfigurations in Nginx access logs
+author: Copilot
+logsource:
+  product: nginx
+  service: webserver
+  category: web
+  definition: accesslog
+  path: access.log
+  fields: [Request, SourceIp, UserAgent, Origin]
+detection:
+  selection:
+    Request|contains:
+      - 'Origin:'
+      - 'Access-Control-Allow-Origin:'
+    Origin|contains:
+      - 'null'
+      - 'evil.com'
+      - 'attacker.com'
+  condition: selection
+fields:
+  - Request
+  - SourceIp
+  - UserAgent
+  - Origin
+level: medium

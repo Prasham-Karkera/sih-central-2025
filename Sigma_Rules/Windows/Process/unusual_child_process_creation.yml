@@ -1,0 +1,28 @@
+title: Unusual Child Process Creation
+id: win-proc-unusual-child
+status: experimental
+description: Detects system processes spawning unexpected child processes
+references:
+  - https://attack.mitre.org/techniques/T1055/
+author: Copilot
+logsource:
+  product: windows
+  service: process
+fields:
+  - name
+  - parent
+  - cmdline
+detection:
+  selection:
+    parent|in:
+      - 'svchost.exe'
+      - 'spoolsv.exe'
+      - 'services.exe'
+    name|not_in:
+      - 'dllhost.exe'
+      - 'rundll32.exe'
+      - 'conhost.exe'
+  condition: selection
+falsepositives:
+  - System updates
+level: high

@@ -1,0 +1,3493 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Sentinel – Premium Security Dashboard</title>
+
+    <!-- Fonts -->
+    <link rel="stylesheet" href="assets/css/fonts.css">
+
+    <!-- Icons -->
+    <link rel="stylesheet" href="assets/css/all.min.css">
+
+    <!-- Tailwind CSS -->
+    <script src="assets/js/tailwindcss.js"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        mono: {
+                            50: '#f9fafb',
+                            100: '#f3f4f6',
+                            200: '#e5e7eb',
+                            300: '#d1d5db',
+                            400: '#9ca3af',
+                            500: '#6b7280',
+                            600: '#4b5563',
+                            700: '#374151',
+                            800: '#1f2937',
+                            900: '#111827',
+                            950: '#030712',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Space Grotesk', 'sans-serif'],
+                    },
+                    animation: {
+                        'spin-slow': 'spin 20s linear infinite',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Libraries -->
+    <script src="assets/js/chart.js"></script>
+    <script src="assets/js/three.min.js"></script>
+    <script src="assets/js/vis-network.min.js"></script>
+    <script src="assets/js/socket.io.min.js"></script>
+
+    <style>
+        /* Base Styles */
+        body {
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        /* Dark Mode (Default) */
+        html.dark body {
+            background-color: #000000;
+            color: #ffffff;
+        }
+
+        html.dark .panel {
+            background-color: rgba(10, 10, 10, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(8px);
+        }
+
+        html.dark .panel-hover:hover {
+            border-color: rgba(255, 255, 255, 0.3);
+            background-color: rgba(20, 20, 20, 0.6);
+        }
+
+        html.dark .input-field {
+            background-color: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        html.dark .table-header {
+            background-color: rgba(255, 255, 255, 0.05);
+            color: #a1a1aa;
+        }
+
+        html.dark .table-row:hover {
+            background-color: rgba(255, 255, 255, 0.03);
+        }
+
+        /* Light Mode */
+        html:not(.dark) body {
+            background-color: #ffffff;
+            color: #000000;
+        }
+
+        html:not(.dark) .panel {
+            background-color: rgba(255, 255, 255, 0.6);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(8px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+
+        html:not(.dark) .panel-hover:hover {
+            border-color: rgba(0, 0, 0, 0.3);
+            background-color: rgba(248, 250, 252, 0.7);
+        }
+
+        html:not(.dark) .input-field {
+            background-color: #f3f4f6;
+            border: 1px solid #d1d5db;
+            color: black;
+        }
+
+        html:not(.dark) .table-header {
+            background-color: #f3f4f6;
+            color: #4b5563;
+        }
+
+        html:not(.dark) .table-row:hover {
+            background-color: #f9fafb;
+        }
+
+        /* Utilities */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+            height: 4px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #525252;
+            border-radius: 2px;
+        }
+
+        #canvas-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0.4;
+            pointer-events: none;
+        }
+
+        /* Drag and Drop Styles */
+        .draggable-widget {
+            cursor: grab;
+            position: relative;
+        }
+
+        .draggable-widget:active {
+            cursor: grabbing;
+        }
+
+        .draggable-widget.dragging {
+            opacity: 0.4;
+            border: 2px dashed #4ade80;
+        }
+
+        .drop-zone {
+            min-height: 50px;
+            transition: all 0.3s ease;
+        }
+
+        .drop-zone.drag-over {
+            background-color: rgba(74, 222, 128, 0.1);
+            border-radius: 0.5rem;
+            border: 2px dashed rgba(74, 222, 128, 0.3);
+        }
+
+        .widget-remove-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background-color: rgba(255, 0, 0, 0.1);
+            color: #ef4444;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: all 0.2s;
+            cursor: pointer;
+            z-index: 20;
+        }
+
+        .widget-remove-btn:hover {
+            background-color: #ef4444;
+            color: white;
+        }
+
+        .panel:hover .widget-remove-btn {
+            opacity: 1;
+        }
+
+        /* View Transitions */
+        .view-section {
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+
+<body
+    class="font-sans antialiased overflow-x-hidden selection:bg-white selection:text-black dark:selection:bg-white dark:selection:text-black select-none"
+    oncontextmenu="return false;">
+
+    <!-- 3D Background -->
+    <div id="canvas-container"></div>
+
+    <!-- Login Overlay -->
+    <div id="login-overlay"
+        class="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm transition-all duration-500">
+        <div
+            class="panel p-8 rounded-2xl w-full max-w-md flex flex-col items-center gap-6 border border-white/10 shadow-2xl relative overflow-hidden">
+            <!-- Decorative Background -->
+            <div class="absolute inset-0 bg-gradient-to-b from-green-500/5 to-transparent pointer-events-none"></div>
+
+            <div
+                class="w-16 h-16 bg-black dark:bg-white text-white dark:text-black rounded-xl flex items-center justify-center font-bold font-display text-3xl shadow-lg z-10">
+                S
+            </div>
+
+            <div class="text-center z-10">
+                <h2 class="font-display font-bold text-2xl tracking-tight">Sentinel Access</h2>
+                <p class="text-xs font-mono opacity-60 mt-2 uppercase tracking-widest">Restricted Environment</p>
+            </div>
+
+            <form onsubmit="handleLogin(event)" class="w-full z-10 space-y-4">
+                <div class="relative group">
+                    <i
+                        class="fas fa-lock absolute left-4 top-1/2 transform -translate-y-1/2 opacity-40 group-focus-within:text-green-500 transition-colors"></i>
+                    <input type="password" id="login-password" placeholder="Enter Access Code (admin)"
+                        class="w-full bg-black/20 border border-white/10 rounded-lg py-3 pl-12 pr-4 outline-none focus:border-green-500/50 focus:bg-black/40 transition-all font-mono text-sm placeholder:text-white/20">
+                </div>
+
+                <button type="submit"
+                    class="w-full bg-white dark:bg-white text-black font-bold py-3 rounded-lg hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(255,255,255,0.1)] hover:shadow-[0_0_30px_rgba(255,255,255,0.2)]">
+                    <i class="fas fa-fingerprint"></i> Authenticate
+                </button>
+
+                <div class="relative flex py-2 items-center">
+                    <div class="flex-grow border-t border-white/10"></div>
+                    <span class="flex-shrink-0 mx-4 text-[10px] font-mono opacity-40 uppercase">Or</span>
+                    <div class="flex-grow border-t border-white/10"></div>
+                </div>
+
+                <button type="button" onclick="handleBiometricLogin()"
+                    class="w-full bg-white/5 border border-white/10 text-white font-mono text-xs py-3 rounded-lg hover:bg-white/10 transition-all flex items-center justify-center gap-2 group">
+                    <i class="fas fa-fingerprint text-green-500 group-hover:scale-110 transition-transform"></i>
+                    <span>Biometric Scan</span>
+                </button>
+            </form>
+
+            <div class="text-[10px] font-mono opacity-30 uppercase tracking-widest mt-4">
+                Secure Connection Established
+            </div>
+        </div>
+    </div>
+
+    <!-- App Content Wrapper -->
+    <div id="app-content" class="transition-all duration-1000 opacity-0 blur-xl pointer-events-none">
+        <!-- Navigation -->
+        <nav
+            class="fixed top-0 w-full z-50 panel border-b-0 border-b border-white/10 px-6 py-4 flex justify-between items-center h-16">
+            <div class="flex items-center gap-3">
+                <button id="sidebar-toggle" onclick="toggleSidebar()"
+                    class="opacity-70 hover:opacity-100 transition-all mr-2 p-2 rounded-full hover:bg-current/10 active:scale-95">
+                    <i class="fas fa-bars-staggered text-xl transform transition-transform duration-300"></i>
+                </button>
+                <div
+                    class="w-8 h-8 bg-black dark:bg-white text-white dark:text-black rounded flex items-center justify-center font-bold font-display text-lg">
+                    S</div>
+                <div class="flex flex-col">
+                    <span class="font-display font-bold text-lg tracking-tight leading-none uppercase">Sentinel</span>
+                    <span class="text-[10px] font-mono opacity-60 tracking-widest uppercase">Security Operations</span>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-4">
+                <!-- Action Buttons -->
+                <div class="flex items-center gap-2 mr-4">
+                    <button onclick="toggleWidgetLibrary()"
+                        class="px-3 py-1.5 rounded flex items-center gap-2 hover:bg-white/10 transition-colors text-xs font-mono border border-yellow-500/30 text-yellow-500">
+                        <i class="fas fa-th-large"></i> <span class="hidden md:inline">Widgets</span>
+                    </button>
+                    <button onclick="triggerPluginUpload()"
+                        class="px-3 py-1.5 rounded flex items-center gap-2 hover:bg-white/10 transition-colors text-xs font-mono border border-cyan-500/30 text-cyan-500">
+                        <i class="fas fa-plus-square"></i> <span class="hidden md:inline">Plugin</span>
+                    </button>
+                    <input type="file" id="plugin-upload-input" accept=".html,.py" class="hidden"
+                        onchange="handlePluginUpload(this)">
+                    <button onclick="generateReport()"
+                        class="px-3 py-1.5 rounded flex items-center gap-2 hover:bg-white/10 transition-colors text-xs font-mono border border-blue-500/30 text-blue-500">
+                        <i class="fas fa-file-alt"></i> <span class="hidden md:inline">Report</span>
+                    </button>
+                </div>
+
+                <div class="hidden md:flex items-center gap-4 text-xs font-mono opacity-60">
+                    <span class="flex items-center gap-2 border-r border-current/20 pr-4">
+                        <i class="fab fa-linux text-lg"></i>
+                        <span>HOST: LINUX</span>
+                    </span>
+                    <span id="clock">00:00:00 UTC</span>
+                    <span>•</span>
+                    <span class="flex items-center gap-1">
+                        <div class="w-1.5 h-1.5 rounded-full bg-green-500"></div> SYSTEM ONLINE
+                    </span>
+                </div>
+
+                <div class="h-4 w-[1px] bg-current opacity-20"></div>
+
+                <button onclick="toggleTheme()" class="opacity-60 hover:opacity-100 transition-opacity">
+                    <i class="fas fa-adjust text-lg"></i>
+                </button>
+                <button onclick="lockSession()" class="opacity-60 hover:opacity-100 transition-opacity ml-4"
+                    title="Lock Session">
+                    <i class="fas fa-lock text-lg"></i>
+                </button>
+            </div>
+        </nav>
+
+        <!-- Sidebar -->
+        <aside id="sidebar"
+            class="fixed top-16 left-0 w-64 h-[calc(100vh-4rem)] z-40 panel border-r border-white/10 flex flex-col transition-all duration-300 transform -translate-x-full md:translate-x-0">
+            <!-- Sidebar Header with Close Button (Visible on mobile) -->
+            <div class="md:hidden flex justify-end p-2">
+                <button onclick="toggleSidebar()" class="text-white/50 hover:text-white p-2">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="flex-1 overflow-y-auto py-4 space-y-1">
+                <button onclick="switchView('dashboard')" id="nav-dashboard"
+                    class="w-full text-left px-6 py-3 text-sm font-mono hover:bg-white/5 transition-colors flex items-center gap-3 border-l-2 border-transparent text-green-500 border-green-500 bg-white/5">
+                    <i class="fas fa-chart-line w-5 text-center"></i> Dashboard
+                </button>
+                <button onclick="switchView('logs')" id="nav-logs"
+                    class="w-full text-left px-6 py-3 text-sm font-mono hover:bg-white/5 transition-colors flex items-center gap-3 border-l-2 border-transparent opacity-70 hover:opacity-100">
+                    <i class="fas fa-list-alt w-5 text-center"></i> System Logs
+                </button>
+                <button onclick="switchView('devices')" id="nav-devices"
+                    class="w-full text-left px-6 py-3 text-sm font-mono hover:bg-white/5 transition-colors flex items-center gap-3 border-l-2 border-transparent opacity-70 hover:opacity-100">
+                    <i class="fas fa-network-wired w-5 text-center"></i> Device Discovery
+                </button>
+                <button onclick="switchView('plugins')" id="nav-plugins"
+                    class="w-full text-left px-6 py-3 text-sm font-mono hover:bg-white/5 transition-colors flex items-center gap-3 border-l-2 border-transparent opacity-70 hover:opacity-100">
+                    <i class="fas fa-plug w-5 text-center"></i> Plugin System
+                </button>
+                <button onclick="switchView('sigma')" id="nav-sigma"
+                    class="w-full text-left px-6 py-3 text-sm font-mono hover:bg-white/5 transition-colors flex items-center gap-3 border-l-2 border-transparent opacity-70 hover:opacity-100">
+                    <i class="fas fa-code w-5 text-center"></i> Sigma Rule Editor
+                </button>
+
+                <div class="h-px bg-white/10 mx-6 my-2"></div>
+
+                <button onclick="switchView('decrypt')" id="nav-decrypt"
+                    class="w-full text-left px-6 py-3 text-sm font-mono hover:bg-white/5 transition-colors flex items-center gap-3 border-l-2 border-transparent opacity-70 hover:opacity-100">
+                    <i class="fas fa-unlock-alt w-5 text-center"></i> Decrypt Report
+                </button>
+                <button onclick="switchView('upload')" id="nav-upload"
+                    class="w-full text-left px-6 py-3 text-sm font-mono hover:bg-white/5 transition-colors flex items-center gap-3 border-l-2 border-transparent opacity-70 hover:opacity-100">
+                    <i class="fas fa-cloud-upload-alt w-5 text-center"></i> Upload Log
+                </button>
+            </div>
+            <div class="p-4 border-t border-white/10">
+                <div class="text-[10px] font-mono opacity-40 text-center">
+                    v2.0.0 Stable
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Container -->
+        <div id="main-container" class="md:pl-64 pt-16 min-h-screen transition-all duration-300">
+
+            <!-- View: Dashboard -->
+            <div id="view-dashboard" class="view-section animate-fade-in">
+
+                <!-- Sub-Navbar (Actions) - Moved inside Dashboard View -->
+                <!-- Sub-Navbar REMOVED -->
+
+                <!-- Main Content Grid -->
+                <main class="pb-12 px-6 w-full space-y-6">
+
+
+                    <!-- Stats Row -->
+                    <div id="stats-row" class="flex flex-wrap gap-4 drop-zone" data-zone="stats">
+                        <!-- 1. Threat Level -->
+                        <div id="widget-stat-threat" draggable="true"
+                            class="panel p-5 rounded-lg flex flex-col justify-between h-32 panel-hover transition-all group draggable-widget flex-1 min-w-[200px]">
+                            <div class="widget-remove-btn" onclick="removeWidget('widget-stat-threat')"><i
+                                    class="fas fa-times"></i></div>
+                            <div class="flex justify-between items-start">
+                                <span class="text-xs font-mono uppercase opacity-60 tracking-wider">Threat Level</span>
+                                <i
+                                    class="fas fa-shield-alt text-sm opacity-40 group-hover:opacity-100 transition-opacity"></i>
+                            </div>
+                            <div>
+                                <span class="text-3xl font-display font-bold">Low</span>
+                                <div class="w-full bg-gray-200 dark:bg-gray-800 h-1 mt-2 rounded-full overflow-hidden">
+                                    <div class="bg-black dark:bg-white h-full w-[20%] transition-all duration-500">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 2. Total Logs -->
+                        <div id="widget-stat-logs" draggable="true"
+                            class="panel p-5 rounded-lg flex flex-col justify-between h-32 panel-hover transition-all group draggable-widget flex-1 min-w-[200px]">
+                            <div class="widget-remove-btn" onclick="removeWidget('widget-stat-logs')"><i
+                                    class="fas fa-times"></i></div>
+                            <div class="flex justify-between items-start">
+                                <span class="text-xs font-mono uppercase opacity-60 tracking-wider">Total Logs</span>
+                                <i
+                                    class="fas fa-file-alt text-sm opacity-40 group-hover:opacity-100 transition-opacity"></i>
+                            </div>
+                            <div>
+                                <span class="text-3xl font-display font-bold">0</span>
+                                <div class="flex items-center gap-1 text-xs mt-1 opacity-60">System Events</div>
+                            </div>
+                        </div>
+
+                        <!-- 3. Online Devices -->
+                        <div id="widget-stat-online" draggable="true"
+                            class="panel p-5 rounded-lg flex flex-col justify-between h-32 panel-hover transition-all group draggable-widget flex-1 min-w-[200px]">
+                            <div class="widget-remove-btn" onclick="removeWidget('widget-stat-online')"><i
+                                    class="fas fa-times"></i></div>
+                            <div class="flex justify-between items-start">
+                                <span class="text-xs font-mono uppercase opacity-60 tracking-wider">Online
+                                    Devices</span>
+                                <i
+                                    class="fas fa-laptop text-sm opacity-40 group-hover:opacity-100 transition-opacity"></i>
+                            </div>
+                            <div>
+                                <span class="text-3xl font-display font-bold">0</span>
+                                <div class="flex items-center gap-1 text-xs mt-1 text-green-500"><i
+                                        class="fas fa-check-circle"></i> Active</div>
+                            </div>
+                        </div>
+
+                        <!-- 4. Total Alerts -->
+                        <div id="widget-stat-alerts" draggable="true"
+                            class="panel p-5 rounded-lg flex flex-col justify-between h-32 panel-hover transition-all group draggable-widget flex-1 min-w-[200px]">
+                            <div class="widget-remove-btn" onclick="removeWidget('widget-stat-alerts')"><i
+                                    class="fas fa-times"></i></div>
+                            <div class="flex justify-between items-start">
+                                <span class="text-xs font-mono uppercase opacity-60 tracking-wider">Total Alerts</span>
+                                <i
+                                    class="fas fa-bell text-sm opacity-40 group-hover:opacity-100 transition-opacity"></i>
+                            </div>
+                            <div>
+                                <span class="text-3xl font-display font-bold">0</span>
+                                <div class="flex items-center gap-1 text-xs mt-1 text-yellow-500"><i
+                                        class="fas fa-exclamation-triangle"></i> Detected</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Main Dashboard Grid -->
+                    <div id="dashboard-columns" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+                        <!-- Left Column: Charts -->
+                        <div id="main-left-col" class="lg:col-span-2 space-y-6 drop-zone" data-zone="main">
+                            <!-- Events Graph -->
+                            <div id="widget-chart-events" draggable="true"
+                                class="panel p-6 rounded-lg draggable-widget">
+                                <div class="widget-remove-btn" onclick="removeWidget('widget-chart-events')"><i
+                                        class="fas fa-times"></i></div>
+                                <div class="flex justify-between items-center mb-6">
+                                    <div>
+                                        <h3 class="font-display font-bold text-lg">Alert Timeline</h3>
+                                        <span id="events-time-display"
+                                            class="text-xs font-mono opacity-50 block mt-1">Today</span>
+                                    </div>
+                                    <div class="flex gap-2">
+                                        <button
+                                            class="text-xs font-mono px-2 py-1 rounded bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 transition">1H</button>
+                                        <button
+                                            class="text-xs font-mono px-2 py-1 rounded bg-black dark:bg-white text-white dark:text-black">24H</button>
+                                    </div>
+                                </div>
+                                <div class="h-64 w-full">
+                                    <canvas id="eventsChart"></canvas>
+                                </div>
+                            </div>
+
+                            <!-- Integrations & Plugins Tile -->
+                            <div id="widget-integrations" draggable="true"
+                                class="panel p-6 rounded-lg draggable-widget">
+                                <div class="widget-remove-btn" onclick="removeWidget('widget-integrations')"><i
+                                        class="fas fa-times"></i></div>
+                                <div class="flex justify-between items-center mb-6">
+                                    <div>
+                                        <h3 class="font-display font-bold text-lg">Integrations & Plugins</h3>
+                                        <p class="text-xs opacity-60 mt-1">Active external connectors</p>
+                                    </div>
+                                </div>
+                                <div id="integrations-grid"
+                                    class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                                    <!-- Default State: No Plugins -->
+                                    <div id="no-plugins-msg"
+                                        class="col-span-full text-center py-8 opacity-40 italic flex flex-col items-center gap-2">
+                                        <i class="fas fa-plug text-2xl"></i>
+                                        <span>No plugins added yet.</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Top Threats Tile -->
+                            <div id="widget-top-threats" draggable="true"
+                                class="panel p-0 rounded-lg draggable-widget overflow-hidden relative group">
+                                <div class="widget-remove-btn" onclick="removeWidget('widget-top-threats')"
+                                    style="z-index: 50;"><i class="fas fa-times"></i></div>
+
+                                <!-- Header Overlay -->
+                                <div class="absolute top-0 left-0 w-full p-6 z-10 pointer-events-none">
+                                </div>
+
+                                <!-- Table Container -->
+                                <div
+                                    class="w-full h-[350px] overflow-auto custom-scrollbar bg-black/5 dark:bg-black/20">
+                                    <table class="w-full text-left text-xs">
+                                        <thead
+                                            class="sticky top-0 z-10 bg-gray-100 dark:bg-[#111] font-mono uppercase text-[10px] tracking-wider">
+                                            <tr>
+                                                <th class="p-3 border-b border-gray-200 dark:border-white/10">Threat
+                                                    Title</th>
+                                                <th class="p-3 border-b border-gray-200 dark:border-white/10 w-24">
+                                                    Severity</th>
+                                                <th
+                                                    class="p-3 border-b border-gray-200 dark:border-white/10 w-20 text-right">
+                                                    Count</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="threats-table-body"
+                                            class="divide-y divide-gray-200 dark:divide-white/5 font-mono">
+                                            <!-- Rows injected via JS -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Right Column: Logs & Discovery -->
+                        <div id="main-right-col" class="space-y-6 drop-zone" data-zone="main">
+                            <!-- Alert Severity Stats (Replaces Auth Stats) -->
+                            <div id="widget-stats-severity" draggable="true"
+                                class="grid grid-cols-3 gap-2 draggable-widget">
+                                <div class="widget-remove-btn" onclick="removeWidget('widget-stats-severity')"><i
+                                        class="fas fa-times"></i></div>
+
+                                <div
+                                    class="panel p-4 rounded-lg flex flex-col items-center justify-center text-center gap-1 border-b-2 border-red-500">
+                                    <span class="text-[10px] font-mono uppercase opacity-60 text-red-500">Critical
+                                        Alert</span>
+                                    <span class="text-xl font-display font-bold text-red-500"
+                                        id="stat-sev-critical">0</span>
+                                </div>
+
+                                <div
+                                    class="panel p-4 rounded-lg flex flex-col items-center justify-center text-center gap-1 border-b-2 border-orange-500">
+                                    <span class="text-[10px] font-mono uppercase opacity-60 text-orange-500">Medium
+                                        Alert</span>
+                                    <span class="text-xl font-display font-bold text-orange-500"
+                                        id="stat-sev-medium">0</span>
+                                </div>
+
+                                <div
+                                    class="panel p-4 rounded-lg flex flex-col items-center justify-center text-center gap-1 border-b-2 border-blue-500">
+                                    <span class="text-[10px] font-mono uppercase opacity-60 text-blue-500">Low
+                                        Alert</span>
+                                    <span class="text-xl font-display font-bold text-blue-500"
+                                        id="stat-sev-low">0</span>
+                                </div>
+                            </div>
+
+                            <!-- Alert Distribution -->
+                            <div id="widget-chart-alerts" draggable="true"
+                                class="panel p-6 rounded-lg draggable-widget">
+                                <div class="widget-remove-btn" onclick="removeWidget('widget-chart-alerts')"><i
+                                        class="fas fa-times"></i></div>
+                                <h3 class="font-display font-bold text-lg mb-4">Alert Distribution</h3>
+                                <div class="h-48 w-full flex justify-center">
+                                    <canvas id="alertsChart"></canvas>
+                                </div>
+                            </div>
+
+                            <!-- MITRE ATT&CK -->
+                            <div id="widget-chart-mitre" draggable="true" class="panel p-6 rounded-lg draggable-widget">
+                                <div class="widget-remove-btn" onclick="removeWidget('widget-chart-mitre')"><i
+                                        class="fas fa-times"></i></div>
+                                <h3 class="font-display font-bold text-lg mb-4">MITRE ATT&CK</h3>
+                                <div class="h-48 w-full flex justify-center">
+                                    <canvas id="mitreChart"></canvas>
+                                </div>
+                            </div>
+
+                            <!-- Log Source Distribution -->
+                            <div id="widget-chart-log-source" draggable="true"
+                                class="panel p-6 rounded-lg draggable-widget">
+                                <div class="widget-remove-btn" onclick="removeWidget('widget-chart-log-source')"><i
+                                        class="fas fa-times"></i></div>
+                                <h3 class="font-display font-bold text-lg mb-4">Log Source Distribution</h3>
+                                <div class="h-48 w-full flex justify-center">
+                                    <canvas id="logSourceChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Event Logs Table REMOVED -->
+
+                </main>
+            </div> <!-- End View Dashboard -->
+
+            <!-- View: System Logs -->
+            <div id="view-logs" class="view-section hidden p-6">
+                <div class="panel p-6 rounded-lg h-[calc(100vh-8rem)] flex flex-col">
+                    <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+                        <div class="flex items-center gap-4">
+                            <h2 class="font-display font-bold text-2xl">System Logs</h2>
+                            <!-- Source Toggles -->
+                            <div class="flex bg-black/20 rounded-lg p-1 border border-white/10">
+                                <button onclick="setLogSource('linux')" id="btn-source-linux"
+                                    class="px-3 py-1.5 rounded text-xs font-bold flex items-center gap-2 transition-all bg-white/10 text-white shadow">
+                                    <i class="fab fa-linux"></i> Linux
+                                </button>
+                                <button onclick="setLogSource('windows')" id="btn-source-windows"
+                                    class="px-3 py-1.5 rounded text-xs font-bold flex items-center gap-2 transition-all opacity-60 hover:opacity-100">
+                                    <i class="fab fa-windows"></i> Windows
+                                </button>
+                            </div>
+                        </div>
+                        <div class="flex gap-2">
+                            <input type="text" id="full-logs-search" placeholder="Search logs..."
+                                class="input-field rounded px-4 py-2 text-sm w-64">
+                            <button onclick="fetchSystemLogs()"
+                                class="px-4 py-2 rounded bg-white/10 hover:bg-white/20 text-white text-sm font-bold"><i
+                                    class="fas fa-sync"></i></button>
+                        </div>
+                    </div>
+
+                    <!-- Table Container -->
+                    <div
+                        class="flex-1 overflow-auto custom-scrollbar bg-black/20 rounded border border-white/5 relative">
+                        <table class="w-full text-left text-sm">
+                            <thead
+                                class="table-header font-mono uppercase sticky top-0 z-10 bg-gray-100 dark:bg-[#0a0a0a] border-b border-gray-200 dark:border-white/10 shadow-sm">
+                                <tr>
+                                    <th class="p-4 w-20">ID</th>
+                                    <th class="p-4 w-24">Source</th>
+                                    <th class="p-4">Content</th>
+                                    <th class="p-4 w-48">Time</th>
+                                    <th class="p-4 w-48 text-right">Server</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-white/5 font-mono" id="full-logs-body">
+                                <!-- Full logs injected here -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Pagination Controls -->
+                    <div class="mt-4 flex justify-between items-center border-t border-white/10 pt-4 mr-16">
+                        <span class="text-xs opacity-60 font-mono" id="logs-pagination-info">Showing 0-0 of 0</span>
+                        <div class="flex gap-2">
+                            <button onclick="changeLogPage(-1)" id="btn-prev-page" disabled
+                                class="px-3 py-1.5 rounded bg-white/5 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed text-xs font-bold transition">
+                                <i class="fas fa-chevron-left mr-1"></i> Previous
+                            </button>
+                            <button onclick="changeLogPage(1)" id="btn-next-page" disabled
+                                class="px-3 py-1.5 rounded bg-white/5 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed text-xs font-bold transition">
+                                Next <i class="fas fa-chevron-right ml-1"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- View: Device Discovery -->
+            <div id="view-devices" class="view-section hidden p-6 space-y-6">
+                <h2 class="font-display font-bold text-2xl">Device Discovery</h2>
+                <div class="grid grid-cols-1 gap-6">
+                    <div class="panel p-6 rounded-lg h-96 flex flex-col">
+                        <h3 class="font-bold mb-4">USB & Hardware</h3>
+                        <div class="overflow-y-auto flex-1 custom-scrollbar space-y-2">
+                            <!-- Item 1 -->
+                            <div
+                                class="flex items-center gap-3 p-3 rounded bg-white/5 border border-white/5 hover:bg-white/10 transition-colors group">
+                                <div
+                                    class="w-8 h-8 rounded flex items-center justify-center bg-blue-500/20 text-blue-500">
+                                    <i class="fab fa-usb text-lg"></i>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex justify-between items-center">
+                                        <h4 class="text-xs font-bold truncate">SanDisk Ultra</h4>
+                                        <span class="text-[10px] font-mono opacity-50">USB 3.0</span>
+                                    </div>
+                                    <p class="text-[10px] opacity-60 truncate">/dev/sdb1 • Mounted</p>
+                                </div>
+                                <div class="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_5px_rgba(34,197,94,0.5)]">
+                                </div>
+                            </div>
+
+                            <!-- Item 2 -->
+                            <div
+                                class="flex items-center gap-3 p-3 rounded bg-white/5 border border-white/5 hover:bg-white/10 transition-colors group">
+                                <div
+                                    class="w-8 h-8 rounded flex items-center justify-center bg-purple-500/20 text-purple-500">
+                                    <i class="fas fa-hdd text-lg"></i>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex justify-between items-center">
+                                        <h4 class="text-xs font-bold truncate">Seagate Expansion</h4>
+                                        <span class="text-[10px] font-mono opacity-50">2TB HDD</span>
+                                    </div>
+                                    <p class="text-[10px] opacity-60 truncate">/dev/sdc • Encrypted</p>
+                                </div>
+                                <div class="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_5px_rgba(34,197,94,0.5)]">
+                                </div>
+                            </div>
+
+                            <!-- Item 3 -->
+                            <div
+                                class="flex items-center gap-3 p-3 rounded bg-white/5 border border-white/5 hover:bg-white/10 transition-colors group">
+                                <div
+                                    class="w-8 h-8 rounded flex items-center justify-center bg-yellow-500/20 text-yellow-500">
+                                    <i class="fas fa-keyboard text-lg"></i>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex justify-between items-center">
+                                        <h4 class="text-xs font-bold truncate">Razer BlackWidow</h4>
+                                        <span class="text-[10px] font-mono opacity-50">HID</span>
+                                    </div>
+                                    <p class="text-[10px] opacity-60 truncate">USB Input Device</p>
+                                </div>
+                                <div class="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_5px_rgba(34,197,94,0.5)]">
+                                </div>
+                            </div>
+
+                            <!-- Item 4 -->
+                            <div
+                                class="flex items-center gap-3 p-3 rounded bg-white/5 border border-white/5 hover:bg-white/10 transition-colors group">
+                                <div
+                                    class="w-8 h-8 rounded flex items-center justify-center bg-red-500/20 text-red-500">
+                                    <i class="fas fa-video text-lg"></i>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex justify-between items-center">
+                                        <h4 class="text-xs font-bold truncate">Logitech C920</h4>
+                                        <span class="text-[10px] font-mono opacity-50">Webcam</span>
+                                    </div>
+                                    <p class="text-[10px] opacity-60 truncate">/dev/video0 • Active</p>
+                                </div>
+                                <div
+                                    class="w-2 h-2 rounded-full bg-red-500 animate-pulse shadow-[0_0_5px_rgba(239,68,68,0.5)]">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="panel p-6 rounded-lg">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="font-bold">Network Devices (Servers)</h3>
+                            <button onclick="fetchDevices()"
+                                class="text-xs bg-white/10 px-2 py-1 rounded">Refresh</button>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-sm">
+                                <thead class="table-header font-mono uppercase">
+                                    <tr>
+                                        <th class="p-3">Hostname</th>
+                                        <th class="p-3">IP Address</th>
+                                        <th class="p-3">Type</th>
+                                        <th class="p-3 text-right">Status</th>
+                                        <th class="p-3 text-right">Logs</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-white/5" id="network-devices-body">
+                                    <!-- Devices injected here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- View: Decrypt Report -->
+            <div id="view-decrypt" class="view-section hidden p-6">
+                <div class="max-w-2xl mx-auto">
+                    <h2 class="font-display font-bold text-2xl mb-6">Decrypt Report</h2>
+                    <div class="panel p-8 rounded-lg border border-dashed border-white/20 flex flex-col items-center justify-center text-center gap-4 transition-all hover:bg-white/5"
+                        id="decrypt-dropzone">
+                        <div
+                            class="w-16 h-16 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-500 mb-2">
+                            <i class="fas fa-file-pdf text-2xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-lg">Upload Encrypted PDF</h3>
+                            <p class="text-xs opacity-60 mt-1">Drag & drop or click to browse</p>
+                        </div>
+                        <input type="file" id="decrypt-file-input" accept=".pdf" class="hidden"
+                            onchange="handleDecryptFileSelect(this)">
+                        <button onclick="document.getElementById('decrypt-file-input').click()"
+                            class="px-6 py-2 rounded bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold transition-colors">
+                            Select File
+                        </button>
+                    </div>
+
+                    <!-- Status Area -->
+                    <div id="decrypt-status" class="mt-6 hidden">
+                        <div class="panel p-4 rounded-lg bg-white/5 border border-white/10">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-sm font-mono" id="decrypt-filename">report.pdf</span>
+                                <span class="text-xs font-bold text-yellow-500"
+                                    id="decrypt-status-text">Decrypting...</span>
+                            </div>
+                            <div class="w-full bg-black/20 h-1.5 rounded-full overflow-hidden">
+                                <div id="decrypt-progress" class="bg-blue-500 h-full w-0 transition-all duration-300">
+                                </div>
+                            </div>
+                        </div>
+                        <div id="decrypt-actions" class="mt-4 flex justify-end hidden">
+                            <button
+                                class="px-4 py-2 rounded bg-green-600 hover:bg-green-500 text-white text-sm font-bold flex items-center gap-2">
+                                <i class="fas fa-download"></i> Download Decrypted File
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- View: Upload Log -->
+            <div id="view-upload" class="view-section hidden p-6">
+                <div class="max-w-2xl mx-auto">
+                    <h2 class="font-display font-bold text-2xl mb-6">Upload System Log</h2>
+                    <div class="panel p-8 rounded-lg border border-dashed border-white/20 flex flex-col items-center justify-center text-center gap-4 transition-all hover:bg-white/5"
+                        id="log-dropzone">
+                        <div
+                            class="w-16 h-16 rounded-full bg-purple-500/20 flex items-center justify-center text-purple-500 mb-2">
+                            <i class="fas fa-file-alt text-2xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-lg">Upload Log File</h3>
+                            <p class="text-xs opacity-60 mt-1">Supported formats: .log, .txt, .json</p>
+                        </div>
+                        <input type="file" id="log-file-input" accept=".log,.txt,.json" class="hidden"
+                            onchange="handleLogFileSelect(this)">
+                        <button onclick="document.getElementById('log-file-input').click()"
+                            class="px-6 py-2 rounded bg-purple-600 hover:bg-purple-500 text-white text-sm font-bold transition-colors">
+                            Select Log File
+                        </button>
+                    </div>
+
+                    <!-- Status Area -->
+                    <div id="log-upload-status" class="mt-6 hidden">
+                        <div class="panel p-4 rounded-lg bg-white/5 border border-white/10">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-sm font-mono" id="log-filename">system.log</span>
+                                <span class="text-xs font-bold text-blue-500" id="log-status-text">Uploading...</span>
+                            </div>
+                            <div class="w-full bg-black/20 h-1.5 rounded-full overflow-hidden">
+                                <div id="log-progress" class="bg-purple-500 h-full w-0 transition-all duration-300">
+                                </div>
+                            </div>
+                        </div>
+                        <div id="log-success-msg" class="mt-4 hidden text-center">
+                            <div
+                                class="inline-flex items-center gap-2 px-4 py-2 rounded bg-green-500/20 text-green-500 border border-green-500/30 text-sm font-bold">
+                                <i class="fas fa-check-circle"></i> Log Ingested Successfully
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="view-plugins" class="view-section hidden p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="font-display font-bold text-2xl">Plugin System</h2>
+                    <button onclick="triggerPluginUpload()"
+                        class="px-4 py-2 rounded bg-cyan-600 text-white text-sm font-bold flex items-center gap-2">
+                        <i class="fas fa-plus"></i> Install Plugin
+                    </button>
+                </div>
+                <div id="plugins-list-container" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- Plugin Cards -->
+                    <div class="panel p-6 rounded-lg border border-dashed border-white/20 flex flex-col items-center justify-center text-center opacity-60 hover:opacity-100 transition cursor-pointer h-48"
+                        onclick="triggerPluginUpload()">
+                        <i class="fas fa-cloud-upload-alt text-4xl mb-2"></i>
+                        <span class="font-mono text-sm">Upload .py or .html plugin</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- View: Sigma Rule Editor -->
+            <div id="view-sigma" class="view-section hidden p-6">
+                <div class="flex gap-6 h-[calc(100vh-8rem)]">
+                    <!-- Sidebar: Rule Browser -->
+                    <div class="w-1/3 panel p-4 rounded-lg flex flex-col gap-4">
+                        <div class="flex justify-between items-center">
+                            <h3 class="font-display font-bold text-lg">Rule Browser</h3>
+                            <button onclick="openNewRuleModal()"
+                                class="text-xs bg-white/10 hover:bg-white/20 px-2 py-1 rounded transition">
+                                <i class="fas fa-plus"></i> New
+                            </button>
+                        </div>
+
+                        <!-- Search -->
+                        <div class="relative">
+                            <i class="fas fa-search absolute left-3 top-2.5 text-xs opacity-40"></i>
+                            <input type="text" id="sigma-search" placeholder="Search rules..."
+                                oninput="filterSigmaTree(this.value)"
+                                class="w-full bg-black/20 border border-white/10 rounded pl-8 pr-3 py-2 text-xs outline-none focus:border-green-500/50">
+                        </div>
+
+                        <!-- Tree View -->
+                        <div
+                            class="flex-1 overflow-y-auto custom-scrollbar border border-white/5 rounded bg-black/10 p-2">
+                            <div id="sigma-tree-container" class="text-sm font-mono">
+                                <!-- Tree injected here -->
+                                <div class="text-center opacity-40 text-xs py-4">Loading rules...</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Main: Editor -->
+                    <div class="flex-1 panel p-0 rounded-lg flex flex-col overflow-hidden relative">
+                        <!-- Editor Header -->
+                        <div class="p-4 border-b border-white/10 flex justify-between items-center bg-white/5">
+                            <div class="flex items-center gap-3">
+                                <div
+                                    class="w-8 h-8 rounded bg-green-500/20 flex items-center justify-center text-green-500">
+                                    <i class="fas fa-code"></i>
+                                </div>
+                                <div>
+                                    <h3 class="font-bold text-sm" id="sigma-editor-filename">No Rule Selected</h3>
+                                    <p class="text-[10px] opacity-60 font-mono" id="sigma-editor-path">Select a rule to
+                                        edit</p>
+                                </div>
+                            </div>
+                            <div class="flex gap-2">
+                                <button onclick="saveSigmaRule()" id="btn-save-sigma" disabled
+                                    class="px-4 py-2 rounded bg-green-600 hover:bg-green-500 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-bold transition-colors flex items-center gap-2">
+                                    <i class="fas fa-save"></i> Save Changes
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Editor Area -->
+                        <div class="flex-1 relative group">
+                            <textarea id="sigma-editor-content" disabled
+                                class="w-full h-full bg-[#1e1e1e] text-[#d4d4d4] font-mono text-sm p-4 outline-none resize-none disabled:opacity-50"
+                                spellcheck="false" placeholder="Select a rule to view content..."></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- New Rule Modal -->
+            <div id="new-rule-modal"
+                class="fixed inset-0 z-[200] bg-black/80 backdrop-blur-sm hidden flex items-center justify-center">
+                <div class="panel p-6 rounded-lg w-full max-w-md border border-white/10 shadow-2xl">
+                    <h3 class="font-display font-bold text-lg mb-4">Create New Sigma Rule</h3>
+
+                    <div class="space-y-4">
+                        <div>
+                            <label class="text-xs font-mono opacity-60 mb-1 block">Parent Folder</label>
+                            <select id="new-rule-folder"
+                                class="w-full bg-black/20 border border-white/10 rounded px-3 py-2 text-sm outline-none focus:border-green-500/50">
+                                <option value="" disabled selected>Select Folder...</option>
+                                <!-- Populated via JS -->
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="text-xs font-mono opacity-60 mb-1 block">Filename</label>
+                            <div class="flex items-center gap-2">
+                                <input type="text" id="new-rule-filename" placeholder="e.g. suspicious_login.yml"
+                                    class="flex-1 bg-black/20 border border-white/10 rounded px-3 py-2 text-sm outline-none focus:border-green-500/50">
+                            </div>
+                            <p class="text-[10px] opacity-40 mt-1">Must end with .yml</p>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end gap-3 mt-6">
+                        <button onclick="document.getElementById('new-rule-modal').classList.add('hidden')"
+                            class="px-4 py-2 rounded bg-white/5 hover:bg-white/10 text-xs font-bold transition">Cancel</button>
+                        <button onclick="createNewRule()"
+                            class="px-4 py-2 rounded bg-green-600 hover:bg-green-500 text-white text-xs font-bold transition">Create
+                            Rule</button>
+                    </div>
+                </div>
+            </div>
+
+        </div> <!-- End Main Container -->
+
+        <!-- Floating Chatbot -->
+        <div class="fixed bottom-8 right-8 z-50">
+            <button onclick="toggleChat()"
+                class="w-14 h-14 bg-black dark:bg-white text-white dark:text-black rounded-full shadow-lg flex items-center justify-center text-xl hover:scale-105 transition-transform">
+                <i class="fas fa-comment-alt"></i>
+            </button>
+
+            <div id="chat-window"
+                class="hidden absolute bottom-16 right-0 w-80 h-96 panel rounded-lg shadow-2xl flex flex-col overflow-hidden transition-all duration-300 origin-bottom-right">
+
+                <!-- Chat Background 3D -->
+                <div id="chat-bg-canvas" class="absolute inset-0 z-0 pointer-events-none opacity-20"></div>
+
+                <div
+                    class="p-4 border-b border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 flex justify-between items-center shrink-0 relative z-10">
+                    <div class="flex items-center gap-2">
+                        <div id="chat-3d-container"
+                            class="w-8 h-8 rounded-full bg-black/10 dark:bg-white/10 overflow-hidden"></div>
+                        <span class="font-display font-bold text-sm">Sentinel Assistant</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <button onclick="toggleChatFullScreen()" class="opacity-50 hover:opacity-100"
+                            title="Toggle Fullscreen">
+                            <i class="fas fa-expand" id="chat-expand-icon"></i>
+                        </button>
+                        <button onclick="toggleChat()" class="opacity-50 hover:opacity-100">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="flex-1 p-4 overflow-y-auto space-y-3 custom-scrollbar relative z-10" id="chat-messages">
+                    <div class="flex justify-start">
+                        <div
+                            class="bg-gray-100 dark:bg-white/10 p-3 rounded-lg rounded-tl-none max-w-[85%] text-xs shadow-sm dark:shadow-none">
+                            Hello. How can I assist with your security analysis today?
+                        </div>
+                    </div>
+                </div>
+                <div
+                    class="p-3 border-t border-gray-200 dark:border-white/10 relative z-10 bg-white/50 dark:bg-transparent backdrop-blur-sm">
+                    <form onsubmit="handleChat(event)" class="flex gap-2">
+                        <input type="text" id="chat-input" placeholder="Type a command..."
+                            class="input-field flex-1 rounded px-3 py-2 text-xs outline-none focus:ring-1 focus:ring-current bg-white dark:bg-white/5">
+                        <button type="submit"
+                            class="bg-black dark:bg-white text-white dark:text-black px-3 rounded hover:opacity-80 transition"><i
+                                class="fas fa-paper-plane text-xs"></i></button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <!-- End App Content Wrapper -->
+
+        <!-- Widget Library Modal -->
+        <div id="widget-library"
+            class="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm hidden">
+            <div class="panel p-6 rounded-lg w-full max-w-2xl flex flex-col gap-4 shadow-2xl relative">
+                <div class="flex justify-between items-center border-b border-white/10 pb-4">
+                    <h3 class="font-display font-bold text-xl">Widget Library</h3>
+                    <div class="flex gap-2">
+                        <button onclick="resetLayout()"
+                            class="px-3 py-1 rounded bg-red-500/20 text-red-500 hover:bg-red-500/30 transition text-xs font-mono">
+                            <i class="fas fa-undo"></i> Reset Layout
+                        </button>
+                        <button onclick="restoreSelectedWidgets()"
+                            class="px-3 py-1 rounded bg-green-500/20 text-green-500 hover:bg-green-500/30 transition text-xs font-mono">
+                            <i class="fas fa-check"></i> Restore Selected
+                        </button>
+                        <button onclick="toggleWidgetLibrary()" class="opacity-60 hover:opacity-100 transition">
+                            <i class="fas fa-times text-lg"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="text-xs font-mono opacity-60">
+                    Select widgets to add back to your dashboard.
+                </div>
+                <div id="removed-widgets-list"
+                    class="grid grid-cols-2 gap-4 max-h-96 overflow-y-auto custom-scrollbar p-2">
+                    <!-- Removed widgets will appear here -->
+                    <div class="col-span-2 text-center py-8 opacity-40 italic">
+                        All widgets are currently active.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Toast Container -->
+        <div id="toast-container"
+            class="fixed bottom-8 left-1/2 transform -translate-x-1/2 z-[100] flex flex-col gap-2 pointer-events-none">
+        </div>
+
+        <script>
+            // --- Toast System ---
+            function showToast(message, type = 'warning') {
+                const container = document.getElementById('toast-container');
+                const toast = document.createElement('div');
+                toast.className = `px-4 py-2 rounded shadow-lg text-xs font-mono flex items-center gap-2 transition-all duration-300 transform translate-y-10 opacity-0 ${type === 'warning' ? 'bg-red-500/90 text-white backdrop-blur border border-red-500/50' : 'bg-green-500/90 text-white backdrop-blur border border-green-500/50'
+                    }`;
+                toast.innerHTML = `<i class="fas ${type === 'warning' ? 'fa-exclamation-triangle' : 'fa-check-circle'}"></i> ${message}`;
+                container.appendChild(toast);
+
+                // Animate in
+                requestAnimationFrame(() => {
+                    toast.classList.remove('translate-y-10', 'opacity-0');
+                });
+
+                // Remove after 3s
+                setTimeout(() => {
+                    toast.classList.add('translate-y-10', 'opacity-0');
+                    setTimeout(() => toast.remove(), 300);
+                }, 3000);
+            }
+
+            // --- Authentication & Secure Logs ---
+            let SYSTEM_LOGS = [];
+
+            // Logs will be fetched from server
+            // generateLogs();
+
+            function handleLogin(e) {
+                e.preventDefault();
+                const password = document.getElementById('login-password').value;
+                const overlay = document.getElementById('login-overlay');
+                const content = document.getElementById('app-content');
+
+                // Hardcoded demo password
+                if (password === 'admin' || password === '1234') {
+                    // Success
+                    overlay.classList.add('opacity-0', 'pointer-events-none');
+                    content.classList.remove('opacity-0', 'blur-xl', 'pointer-events-none');
+
+                    // Render Logs
+                    renderSecureLogs();
+
+                    showToast('Authentication Successful', 'success');
+                } else {
+                    // Failure
+                    showToast('Access Denied: Invalid Credentials');
+                    document.getElementById('login-password').value = '';
+                    document.getElementById('login-password').focus();
+
+                    // Shake animation
+                    const panel = overlay.querySelector('.panel');
+                    panel.classList.add('animate-pulse'); // Simple shake replacement
+                    setTimeout(() => panel.classList.remove('animate-pulse'), 500);
+                }
+            }
+
+            async function handleBiometricLogin() {
+                if (!window.PublicKeyCredential) {
+                    showToast('Biometrics not supported on this device');
+                    return;
+                }
+
+                // Check for secure context (required for WebAuthn)
+                if (!window.isSecureContext) {
+                    showToast('Biometrics require HTTPS or Localhost');
+                    // Fallback for demo/dev if needed, but strictly WebAuthn fails.
+                    // We'll proceed to try, but it will likely throw.
+                }
+
+                try {
+                    showToast('Place finger on sensor...', 'info');
+
+                    // We use 'create' to force a user verification (biometric check) 
+                    // since we don't have a registered credential ID to 'get'.
+                    // This effectively asks the OS to "Verify it's you to create a key".
+                    const publicKey = {
+                        challenge: new Uint8Array(32), // Random challenge
+                        rp: { name: "Sentinel Dashboard" },
+                        user: {
+                            id: new Uint8Array(16),
+                            name: "admin",
+                            displayName: "Administrator"
+                        },
+                        pubKeyCredParams: [{ type: "public-key", alg: -7 }],
+                        authenticatorSelection: {
+                            authenticatorAttachment: "platform", // Prefer built-in (TouchID, Windows Hello)
+                            userVerification: "required" // Force biometric/pin
+                        },
+                        timeout: 60000
+                    };
+
+                    // Trigger the browser/OS dialog
+                    await navigator.credentials.create({ publicKey });
+
+                    // If we get here, the user passed the biometric check
+                    const overlay = document.getElementById('login-overlay');
+                    const content = document.getElementById('app-content');
+
+                    overlay.classList.add('opacity-0', 'pointer-events-none');
+                    content.classList.remove('opacity-0', 'blur-xl', 'pointer-events-none');
+
+                    renderSecureLogs();
+                    showToast('Biometric Verified', 'success');
+
+                } catch (err) {
+                    console.error(err);
+                    if (err.name === 'NotAllowedError') {
+                        showToast('Biometric Request Cancelled');
+                    } else {
+                        showToast('Biometric Auth Failed: ' + err.message);
+                    }
+                }
+            }
+
+            function lockSession() {
+                const overlay = document.getElementById('login-overlay');
+                const content = document.getElementById('app-content');
+
+                overlay.classList.remove('opacity-0', 'pointer-events-none');
+                content.classList.add('opacity-0', 'blur-xl', 'pointer-events-none');
+
+                document.getElementById('login-password').value = '';
+                showToast('Session Locked');
+            }
+
+            function renderSecureLogs() {
+                const tbody = document.getElementById('logs-body');
+                tbody.innerHTML = ''; // Clear existing (if any)
+
+                const timeFilter = document.getElementById('log-filter-time')?.value || 'all';
+                const levelFilter = document.getElementById('log-filter-level')?.value || 'all';
+                const now = new Date();
+
+                SYSTEM_LOGS.forEach(log => {
+                    // Filter Level
+                    if (levelFilter !== 'all' && log.level !== levelFilter) return;
+
+                    // Filter Time
+                    if (timeFilter === '1h') {
+                        if (now - log.timestamp > 60 * 60 * 1000) return;
+                    } else if (timeFilter === '24h') {
+                        if (now - log.timestamp > 24 * 60 * 60 * 1000) return;
+                    }
+
+                    const tr = document.createElement('tr');
+                    tr.className = 'table-row transition-colors';
+
+                    let levelClass = 'font-bold';
+                    if (log.level === 'WARN') levelClass += ' text-yellow-500';
+                    if (log.level === 'CRIT') levelClass += ' text-red-500';
+
+                    tr.innerHTML = `
+                        <td class="p-4 opacity-70">${log.time}</td>
+                        <td class="p-4 ${levelClass}">${log.level}</td>
+                        <td class="p-4">${log.source}</td>
+                        <td class="p-4 opacity-80">${log.msg}</td>
+                        <td class="p-4 text-right"><button class="hover:underline">Details</button></td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+
+            // --- API Integration ---
+            async function fetchDashboardData() {
+                try {
+                    // 1. Dashboard Overview (Populates Stats Row)
+                    const overviewRes = await fetch('/api/dashboard/overview');
+                    if (overviewRes.ok) {
+                        const overview = await overviewRes.json();
+                        updateStatsWidgets(overview);
+                    }
+
+                    // 2. Event Velocity (Timeline)
+                    const timelineRes = await fetch('/api/dashboard/timeline?hours=24');
+                    if (timelineRes.ok) {
+                        const timelineData = await timelineRes.json();
+                        updateEventsChart(timelineData);
+                    }
+
+                    // 3. Top Threats & Alert Distribution
+                    // We fetch top threats and use them for BOTH the table and the distribution chart
+                    const threatsRes = await fetch('/api/dashboard/top-threats?limit=500');
+                    if (threatsRes.ok) {
+                        const threatsData = await threatsRes.json();
+                        updateThreatsChart(threatsData.threats);
+                        updateAlertsChart(threatsData.threats);
+                    }
+
+                    // 4. Fetch logs for the dashboard widget
+                    const logsRes = await fetch('/api/logs?limit=50');
+                    if (logsRes.ok) {
+                        const logsData = await logsRes.json();
+                        SYSTEM_LOGS = logsData.logs.map(log => ({
+                            time: new Date(log.recv_time).toISOString().replace('T', ' ').split('.')[0],
+                            timestamp: new Date(log.recv_time),
+                            level: log.log_source === 'suricata' ? 'CRIT' : 'INFO', // Simple mapping
+                            source: log.log_source,
+                            msg: log.raw_log
+                        }));
+                        renderSecureLogs();
+                    }
+
+                } catch (e) {
+                    console.error("Failed to fetch dashboard data:", e);
+                }
+            }
+
+            function updateStatsWidgets(data) {
+                // 1. Threat Level
+                const threatWidget = document.getElementById('widget-stat-threat');
+                if (threatWidget) {
+                    const valueEl = threatWidget.querySelector('.text-3xl');
+                    const barEl = threatWidget.querySelector('.h-full');
+                    const level = data.threat_level || 'low';
+
+                    if (valueEl) valueEl.innerText = level.charAt(0).toUpperCase() + level.slice(1);
+
+                    let width = '20%';
+                    let color = 'bg-black dark:bg-white'; // Default Low
+                    if (level === 'medium') { width = '50%'; color = 'bg-yellow-500'; }
+                    else if (level === 'high') { width = '80%'; color = 'bg-orange-500'; }
+                    else if (level === 'critical') { width = '100%'; color = 'bg-red-500'; }
+
+                    if (barEl) {
+                        barEl.style.width = width;
+                        barEl.className = `h-full ${color} transition-all duration-500`;
+                    }
+                }
+
+                // 2. Total Logs
+                const logsEl = document.querySelector('#widget-stat-logs .text-3xl');
+                if (logsEl) logsEl.innerText = data.logs.total.toLocaleString();
+
+                // 3. Online Devices (Servers)
+                const onlineEl = document.querySelector('#widget-stat-online .text-3xl');
+                if (onlineEl) onlineEl.innerText = data.servers.online + '/' + data.servers.total;
+
+                // 4. Total Alerts
+                const alertsEl = document.querySelector('#widget-stat-alerts .text-3xl');
+                if (alertsEl) alertsEl.innerText = data.alerts.total.toLocaleString();
+
+                // 5. Update Log Source Chart
+                if (data.logs && data.logs.by_source) {
+                    updateLogSourceChart(data.logs.by_source);
+                }
+            }
+
+            function updateThreatsChart(threats) {
+                const tbody = document.getElementById('threats-table-body');
+                if (!tbody) return;
+
+                // Sort by count descending
+                threats.sort((a, b) => b.count - a.count);
+
+                tbody.innerHTML = threats.map(threat => {
+                    let sevColor = 'text-blue-500 bg-blue-500/10';
+                    if (threat.severity === 'critical') sevColor = 'text-red-500 bg-red-500/10';
+                    else if (threat.severity === 'high') sevColor = 'text-orange-500 bg-orange-500/10';
+                    else if (threat.severity === 'medium') sevColor = 'text-yellow-500 bg-yellow-500/10';
+
+                    return `
+                        <tr class="hover:bg-black/5 dark:hover:bg-white/5 transition-colors group">
+                            <td class="p-3 border-b border-gray-200 dark:border-white/5 font-medium whitespace-normal break-words max-w-[200px]" title="${threat.title}">
+                                ${threat.title}
+                            </td>
+                            <td class="p-3 border-b border-gray-200 dark:border-white/5">
+                                <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${sevColor}">
+                                    ${threat.severity}
+                                </span>
+                            </td>
+                            <td class="p-3 border-b border-gray-200 dark:border-white/5 text-right font-bold opacity-80">
+                                ${threat.count.toLocaleString()}
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+
+            function updateEventsChart(data) {
+                const ctx = document.getElementById('eventsChart');
+                const timeDisplay = document.getElementById('events-time-display');
+
+                if (!ctx) return;
+
+                // Update Time Display
+                if (timeDisplay && data.period_start && data.period_end) {
+                    const start = new Date(data.period_start).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    const end = new Date(data.period_end).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    timeDisplay.innerText = `${start} - ${end}`;
+                }
+
+                // Process Timeline Data
+                // Sort timestamps
+                const timestamps = Object.keys(data.timeline).sort();
+
+                // Prepare datasets
+                const criticalData = [];
+                const highData = [];
+                const mediumData = [];
+                const lowData = [];
+
+                timestamps.forEach(ts => {
+                    const counts = data.timeline[ts];
+                    criticalData.push(counts.critical || 0);
+                    highData.push(counts.high || 0);
+                    mediumData.push(counts.medium || 0);
+                    lowData.push(counts.low || 0);
+                });
+
+                // Format labels (Time only)
+                const labels = timestamps.map(ts => {
+                    const date = new Date(ts);
+                    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                });
+
+                // Theme Detection
+                const isDark = document.documentElement.classList.contains('dark');
+                const textColor = isDark ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.6)';
+                const gridColor = isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)';
+                const tooltipBg = isDark ? 'rgba(0, 0, 0, 0.9)' : 'rgba(255, 255, 255, 0.9)';
+                const tooltipText = isDark ? '#fff' : '#000';
+
+                // Create Gradients
+                const chartCtx = ctx.getContext('2d');
+
+                const createGradient = (color1, color2) => {
+                    const gradient = chartCtx.createLinearGradient(0, 0, 0, 400);
+                    gradient.addColorStop(0, color1);
+                    gradient.addColorStop(1, color2);
+                    return gradient;
+                };
+
+                const gradients = {
+                    critical: createGradient('#ef4444', '#991b1b'), // Red
+                    high: createGradient('#f97316', '#c2410c'),     // Orange
+                    medium: createGradient('#eab308', '#a16207'),   // Yellow
+                    low: createGradient('#3b82f6', '#1d4ed8')       // Blue
+                };
+
+                if (window.charts.events) window.charts.events.destroy();
+
+                window.charts.events = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [
+                            {
+                                label: 'Critical',
+                                data: criticalData,
+                                backgroundColor: gradients.critical,
+                                borderRadius: 4,
+                                barPercentage: 0.6,
+                                categoryPercentage: 0.8
+                            },
+                            {
+                                label: 'High',
+                                data: highData,
+                                backgroundColor: gradients.high,
+                                borderRadius: 4,
+                                barPercentage: 0.6,
+                                categoryPercentage: 0.8
+                            },
+                            {
+                                label: 'Medium',
+                                data: mediumData,
+                                backgroundColor: gradients.medium,
+                                borderRadius: 4,
+                                barPercentage: 0.6,
+                                categoryPercentage: 0.8
+                            },
+                            {
+                                label: 'Low',
+                                data: lowData,
+                                backgroundColor: gradients.low,
+                                borderRadius: 4,
+                                barPercentage: 0.6,
+                                categoryPercentage: 0.8
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        interaction: {
+                            mode: 'index',
+                            intersect: false,
+                        },
+                        scales: {
+                            x: {
+                                stacked: true,
+                                grid: { display: false },
+                                ticks: {
+                                    color: textColor,
+                                    font: { family: 'monospace', size: 10 }
+                                }
+                            },
+                            y: {
+                                stacked: true,
+                                grid: { color: gridColor, borderDash: [4, 4] },
+                                ticks: {
+                                    color: textColor,
+                                    font: { family: 'monospace', size: 10 },
+                                    maxTicksLimit: 5
+                                },
+                                border: { display: false }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                                align: 'end',
+                                labels: {
+                                    color: textColor,
+                                    usePointStyle: true,
+                                    pointStyle: 'circle',
+                                    boxWidth: 6,
+                                    font: { size: 11, family: 'Inter' }
+                                }
+                            },
+                            tooltip: {
+                                backgroundColor: tooltipBg,
+                                titleColor: tooltipText,
+                                bodyColor: tooltipText,
+                                borderColor: gridColor,
+                                borderWidth: 1,
+                                padding: 12,
+                                cornerRadius: 8,
+                                titleFont: { family: 'Space Grotesk', weight: 'bold' },
+                                bodyFont: { family: 'monospace' },
+                                displayColors: true,
+                                usePointStyle: true
+                            }
+                        }
+                    }
+                });
+            }
+
+            function updateAlertsChart(threats) {
+                // Aggregate counts
+                let criticalCount = 0;
+                let warningCount = 0;
+                let infoCount = 0;
+
+                threats.forEach(t => {
+                    if (t.severity === 'critical' || t.severity === 'high') {
+                        criticalCount += t.count;
+                    } else if (t.severity === 'medium') {
+                        warningCount += t.count;
+                    } else {
+                        infoCount += t.count;
+                    }
+                });
+
+                // Update Severity Stats Widgets (New)
+                const critEl = document.getElementById('stat-sev-critical');
+                if (critEl) critEl.innerText = criticalCount.toLocaleString();
+
+                const medEl = document.getElementById('stat-sev-medium');
+                if (medEl) medEl.innerText = warningCount.toLocaleString();
+
+                const lowEl = document.getElementById('stat-sev-low');
+                if (lowEl) lowEl.innerText = infoCount.toLocaleString();
+
+                // Update Chart
+                if (window.charts && window.charts.alerts) {
+                    const chart = window.charts.alerts;
+
+                    // If all zero, default to something to show the chart
+                    if (criticalCount + warningCount + infoCount === 0) {
+                        chart.data.datasets[0].data = [0, 0, 1]; // 1 info just to show ring
+                    } else {
+                        chart.data.datasets[0].data = [criticalCount, warningCount, infoCount];
+                    }
+                    chart.update();
+                }
+            }
+
+            function updateLogSourceChart(logSources) {
+                const ctx = document.getElementById('logSourceChart');
+                if (!ctx) return;
+
+                // Theme Detection
+                const isDark = document.documentElement.classList.contains('dark');
+                const textColor = isDark ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.6)';
+                const gridColor = isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)';
+                const tooltipBg = isDark ? 'rgba(0, 0, 0, 0.9)' : 'rgba(255, 255, 255, 0.9)';
+                const tooltipText = isDark ? '#fff' : '#000';
+
+                // Data Preparation
+                const labels = ['Linux', 'Windows', 'Nginx'];
+                const data = [
+                    logSources.linux || 0,
+                    logSources.windows || 0,
+                    logSources.nginx || 0
+                ];
+
+                // Create Gradients
+                const chartCtx = ctx.getContext('2d');
+                const createGradient = (color1, color2) => {
+                    const gradient = chartCtx.createLinearGradient(0, 0, 400, 0); // Horizontal gradient
+                    gradient.addColorStop(0, color1);
+                    gradient.addColorStop(1, color2);
+                    return gradient;
+                };
+
+                const gradients = [
+                    createGradient('#3b82f6', '#1d4ed8'), // Blue for Linux
+                    createGradient('#8b5cf6', '#6d28d9'), // Purple for Windows
+                    createGradient('#10b981', '#059669')  // Green for Nginx
+                ];
+
+                if (window.charts.logSource) window.charts.logSource.destroy();
+
+                window.charts.logSource = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Log Count',
+                            data: data,
+                            backgroundColor: gradients,
+                            borderRadius: 6,
+                            barPercentage: 0.6,
+                            categoryPercentage: 0.8
+                        }]
+                    },
+                    options: {
+                        indexAxis: 'y', // Horizontal Bar Chart
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            x: {
+                                grid: { color: gridColor, borderDash: [4, 4] },
+                                ticks: {
+                                    color: textColor,
+                                    font: { family: 'monospace', size: 10 }
+                                },
+                                border: { display: false }
+                            },
+                            y: {
+                                grid: { display: false },
+                                ticks: {
+                                    color: textColor,
+                                    font: { family: 'Space Grotesk', weight: 'bold', size: 11 }
+                                },
+                                border: { display: false }
+                            }
+                        },
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                backgroundColor: tooltipBg,
+                                titleColor: tooltipText,
+                                bodyColor: tooltipText,
+                                borderColor: gridColor,
+                                borderWidth: 1,
+                                padding: 12,
+                                cornerRadius: 8,
+                                titleFont: { family: 'Space Grotesk', weight: 'bold' },
+                                bodyFont: { family: 'monospace' },
+                                displayColors: true,
+                                usePointStyle: true
+                            }
+                        }
+                    }
+                });
+            }
+
+            /*
+            function updateThreatLevel(level) {
+                // ... removed ...
+            }
+            */
+            function init3D() {
+                const container = document.getElementById('canvas-container');
+                const scene = new THREE.Scene();
+                const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+                const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+
+                renderer.setSize(window.innerWidth, window.innerHeight);
+                container.appendChild(renderer.domElement);
+
+                // Inner Core (Shield)
+                const geometry = new THREE.IcosahedronGeometry(8, 2);
+                const material = new THREE.MeshBasicMaterial({
+                    color: 0x4ade80, // Greenish for security
+                    wireframe: true,
+                    transparent: true,
+                    opacity: 0.3 // Increased opacity
+                });
+                const sphere = new THREE.Mesh(geometry, material);
+                scene.add(sphere);
+
+                // Outer Shell (Force Field)
+                const outerGeo = new THREE.IcosahedronGeometry(14, 1);
+                const outerMat = new THREE.MeshBasicMaterial({
+                    color: 0x888888,
+                    wireframe: true,
+                    transparent: true,
+                    opacity: 0.15 // Increased opacity
+                });
+                const outerSphere = new THREE.Mesh(outerGeo, outerMat);
+                scene.add(outerSphere);
+
+                // Floating Security Objects (Cubes/Locks)
+                const securityGroup = new THREE.Group();
+                const secGeo = new THREE.BoxGeometry(0.5, 0.5, 0.5);
+                const secMat = new THREE.MeshBasicMaterial({ color: 0x4ade80, wireframe: true });
+
+                for (let i = 0; i < 50; i++) {
+                    const mesh = new THREE.Mesh(secGeo, secMat);
+                    mesh.position.set(
+                        (Math.random() - 0.5) * 40,
+                        (Math.random() - 0.5) * 40,
+                        (Math.random() - 0.5) * 20
+                    );
+                    mesh.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, 0);
+                    securityGroup.add(mesh);
+                }
+                scene.add(securityGroup);
+
+                // Floating Particles
+                const particlesGeom = new THREE.BufferGeometry();
+                const particlesCount = 1500; // Increased count
+                const posArray = new Float32Array(particlesCount * 3);
+                for (let i = 0; i < particlesCount * 3; i++) {
+                    posArray[i] = (Math.random() - 0.5) * 80;
+                }
+                particlesGeom.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+                const particlesMat = new THREE.PointsMaterial({
+                    size: 0.08,
+                    color: 0x888888,
+                    transparent: true,
+                    opacity: 0.6
+                });
+                const particlesMesh = new THREE.Points(particlesGeom, particlesMat);
+                scene.add(particlesMesh);
+
+                camera.position.z = 30;
+
+                // Animation Loop
+                function animate() {
+                    requestAnimationFrame(animate);
+                    sphere.rotation.x += 0.002;
+                    sphere.rotation.y += 0.002;
+
+                    outerSphere.rotation.x -= 0.001;
+                    outerSphere.rotation.y -= 0.001;
+
+                    particlesMesh.rotation.y += 0.0005;
+                    securityGroup.rotation.y -= 0.001;
+                    securityGroup.rotation.x += 0.0005;
+
+                    // Theme adaptation
+                    const isDark = document.documentElement.classList.contains('dark');
+                    const color = isDark ? 0xffffff : 0x000000;
+                    const shieldColor = isDark ? 0x4ade80 : 0x16a34a; // Green
+
+                    material.color.setHex(shieldColor);
+                    outerMat.color.setHex(color);
+                    particlesMat.color.setHex(color);
+                    secMat.color.setHex(shieldColor);
+
+                    renderer.render(scene, camera);
+                }
+                animate();
+
+                // Resize Handler
+                window.addEventListener('resize', () => {
+                    camera.aspect = window.innerWidth / window.innerHeight;
+                    camera.updateProjectionMatrix();
+                    renderer.setSize(window.innerWidth, window.innerHeight);
+                });
+            }
+
+            // --- Charts (Chart.js) ---
+            function initCharts() {
+                window.charts = {};
+                Chart.defaults.font.family = 'Inter';
+                Chart.defaults.color = '#888888';
+                Chart.defaults.scale.grid.color = 'rgba(128, 128, 128, 0.1)';
+
+                // Events Chart (Stacked Area - Realtime)
+                const ctxEvents = document.getElementById('eventsChart').getContext('2d');
+
+                // Generate initial data
+                const initialDataPoints = 60;
+                const labels = [];
+                const data1 = [];
+                const data2 = [];
+                const data3 = [];
+
+                let now = new Date();
+                for (let i = 0; i < initialDataPoints; i++) {
+                    const t = new Date(now.getTime() - (initialDataPoints - i) * 1000);
+                    labels.push(t.getHours().toString().padStart(2, '0') + ':' + t.getMinutes().toString().padStart(2, '0') + ':' + t.getSeconds().toString().padStart(2, '0'));
+                    data1.push(Math.floor(Math.random() * 30) + 10);
+                    data2.push(Math.floor(Math.random() * 20) + 5);
+                    data3.push(Math.floor(Math.random() * 15) + 5);
+                }
+
+                const eventsChart = new Chart(ctxEvents, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [
+                            {
+                                label: 'Web Server',
+                                data: data1,
+                                borderColor: document.documentElement.classList.contains('dark') ? '#ffffff' : '#000000',
+                                borderWidth: 1.5,
+                                backgroundColor: (context) => {
+                                    const ctx = context.chart.ctx;
+                                    const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+                                    const color = document.documentElement.classList.contains('dark') ? '255, 255, 255' : '0, 0, 0';
+                                    gradient.addColorStop(0, `rgba(${color}, 0.2)`);
+                                    gradient.addColorStop(1, `rgba(${color}, 0)`);
+                                    return gradient;
+                                },
+                                tension: 0.4,
+                                pointRadius: 0,
+                                fill: true
+                            },
+                            {
+                                label: 'App Server',
+                                data: data2,
+                                borderColor: '#8b5cf6', // Purple
+                                backgroundColor: 'rgba(139, 92, 246, 0.2)',
+                                fill: true,
+                                tension: 0.4,
+                                pointRadius: 0
+                            },
+                            {
+                                label: 'DB Server',
+                                data: data3,
+                                borderColor: '#10b981', // Emerald
+                                backgroundColor: 'rgba(16, 185, 129, 0.2)',
+                                fill: true,
+                                tension: 0.4,
+                                pointRadius: 0
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        animation: false, // Disable default animation for smooth realtime updates
+                        plugins: {
+                            legend: { display: true, position: 'top', align: 'end', labels: { boxWidth: 8, usePointStyle: true } },
+                            tooltip: { mode: 'index', intersect: false }
+                        },
+                        scales: {
+                            x: {
+                                grid: { display: false },
+                                border: { display: false },
+                                ticks: { maxTicksLimit: 6, maxRotation: 0 }
+                            },
+                            y: {
+                                stacked: true,
+                                border: { display: false },
+                                min: 0,
+                                suggestedMax: 100
+                            }
+                        },
+                        interaction: {
+                            mode: 'nearest',
+                            axis: 'x',
+                            intersect: false
+                        }
+                    }
+                });
+
+                // Real-time Update Loop for Events Chart
+                setInterval(() => {
+                    const now = new Date();
+                    const timeLabel = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0') + ':' + now.getSeconds().toString().padStart(2, '0');
+
+                    // Remove oldest
+                    eventsChart.data.labels.shift();
+                    eventsChart.data.datasets.forEach(ds => ds.data.shift());
+
+                    // Add newest
+                    eventsChart.data.labels.push(timeLabel);
+
+                    eventsChart.data.datasets.forEach(ds => {
+                        const last = ds.data[ds.data.length - 1];
+                        // Random walk
+                        let change = Math.floor(Math.random() * 10) - 4;
+                        let newVal = last + change;
+                        if (newVal < 5) newVal = 5;
+                        if (newVal > 50) newVal = 50;
+                        ds.data.push(newVal);
+                    });
+
+                    eventsChart.update('none'); // Efficient update
+                }, 1000);
+
+
+                window.charts.events = eventsChart;
+
+                // Alerts Chart (Doughnut)
+                const ctxAlerts = document.getElementById('alertsChart').getContext('2d');
+                const alertsChart = new Chart(ctxAlerts, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Critical', 'Warning', 'Info'],
+                        datasets: [{
+                            data: [5, 15, 80],
+                            backgroundColor: ['#ef4444', '#eab308', document.documentElement.classList.contains('dark') ? '#333333' : '#e5e5e5'],
+                            borderWidth: 0,
+                            hoverOffset: 5
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        cutout: '75%',
+                        plugins: {
+                            legend: { position: 'right', labels: { usePointStyle: true, boxWidth: 6 } }
+                        }
+                    }
+                });
+
+                window.charts.alerts = alertsChart;
+
+                // Simulate live updates for Alerts - REMOVED for Real Data
+                /*
+                setInterval(() => {
+                    const data = alertsChart.data.datasets[0].data;
+                    // Randomly fluctuate
+                    data[0] = Math.max(2, Math.min(10, data[0] + (Math.random() > 0.5 ? 1 : -1))); // Critical
+                    data[1] = Math.max(10, Math.min(25, data[1] + (Math.random() > 0.5 ? 1 : -1))); // Warning
+                    data[2] = 100 - data[0] - data[1]; // Info takes the rest
+                    alertsChart.update();
+                }, 2000);
+                */
+
+                // MITRE ATT&CK Chart
+                const ctxMitre = document.getElementById('mitreChart').getContext('2d');
+                const mitreChart = new Chart(ctxMitre, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Password Guessing', 'SSH', 'Brute Force', 'Valid Accounts', 'System Binary Proxy', 'Account Access Removal'],
+                        datasets: [{
+                            data: [25, 15, 10, 20, 15, 15],
+                            backgroundColor: [
+                                '#3b82f6', // Blue
+                                '#60a5fa', // Light Blue
+                                '#facc15', // Yellow
+                                '#2dd4bf', // Teal
+                                '#4ade80', // Green
+                                '#c084fc'  // Purple
+                            ],
+                            borderWidth: 0,
+                            hoverOffset: 5
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        cutout: '65%',
+                        plugins: {
+                            legend: { position: 'right', labels: { usePointStyle: true, boxWidth: 6, font: { size: 10 } } }
+                        }
+                    }
+                });
+
+                // Update charts on theme toggle
+                window.updateChartsTheme = () => {
+                    const isDark = document.documentElement.classList.contains('dark');
+                    const textColor = isDark ? '#e5e5e5' : '#4b5563';
+                    const infoColor = isDark ? '#333333' : '#e5e5e5';
+                    const lineColor = isDark ? '#ffffff' : '#000000';
+
+                    // Alerts Chart
+                    alertsChart.data.datasets[0].backgroundColor[2] = infoColor;
+                    alertsChart.update();
+
+                    // Events Chart
+                    eventsChart.data.datasets[0].borderColor = lineColor;
+                    eventsChart.update();
+                };
+            }
+
+
+
+            // --- Logic ---
+            function toggleTheme() {
+                document.documentElement.classList.toggle('dark');
+                if (window.updateChartsTheme) window.updateChartsTheme();
+            }
+
+            // --- Chat Logic ---
+            let chat3dInitialized = false;
+            let chatBgInitialized = false;
+
+            function initChat3D() {
+                const container = document.getElementById('chat-3d-container');
+                if (!container) return;
+
+                const scene = new THREE.Scene();
+                const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 100);
+                const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+
+                renderer.setSize(32, 32); // Fixed size matching w-8 h-8
+                container.appendChild(renderer.domElement);
+
+                const geometry = new THREE.IcosahedronGeometry(1, 0);
+                const material = new THREE.MeshBasicMaterial({
+                    color: 0x4ade80,
+                    wireframe: true
+                });
+                const mesh = new THREE.Mesh(geometry, material);
+                scene.add(mesh);
+
+                camera.position.z = 3;
+
+                function animate() {
+                    requestAnimationFrame(animate);
+                    mesh.rotation.x += 0.03;
+                    mesh.rotation.y += 0.03;
+                    renderer.render(scene, camera);
+                }
+                animate();
+            }
+
+            function initChatBg3D() {
+                const container = document.getElementById('chat-bg-canvas');
+                if (!container) return;
+
+                const scene = new THREE.Scene();
+                const camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
+                const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+
+                renderer.setSize(container.clientWidth, container.clientHeight);
+                container.appendChild(renderer.domElement);
+
+                // Shield Object
+                const geometry = new THREE.IcosahedronGeometry(5, 1);
+                const material = new THREE.MeshBasicMaterial({
+                    color: 0x4ade80,
+                    wireframe: true,
+                    transparent: true,
+                    opacity: 0.15
+                });
+                const shield = new THREE.Mesh(geometry, material);
+                scene.add(shield);
+
+                // Outer Ring
+                const ringGeo = new THREE.TorusGeometry(7, 0.2, 16, 100);
+                const ringMat = new THREE.MeshBasicMaterial({ color: 0x888888, transparent: true, opacity: 0.1 });
+                const ring = new THREE.Mesh(ringGeo, ringMat);
+                scene.add(ring);
+
+                camera.position.z = 15;
+
+                function animate() {
+                    requestAnimationFrame(animate);
+                    shield.rotation.y += 0.005;
+                    shield.rotation.x += 0.002;
+                    ring.rotation.x += 0.005;
+                    ring.rotation.y += 0.005;
+
+                    // Theme adaptation
+                    const isDark = document.documentElement.classList.contains('dark');
+                    const shieldColor = isDark ? 0x4ade80 : 0x16a34a;
+                    const ringColor = isDark ? 0x888888 : 0x000000;
+
+                    material.color.setHex(shieldColor);
+                    ringMat.color.setHex(ringColor);
+
+                    renderer.render(scene, camera);
+                }
+                animate();
+
+                // Handle resize for full screen toggle
+                const resizeObserver = new ResizeObserver(() => {
+                    camera.aspect = container.clientWidth / container.clientHeight;
+                    camera.updateProjectionMatrix();
+                    renderer.setSize(container.clientWidth, container.clientHeight);
+                });
+                resizeObserver.observe(container);
+            }
+
+            function toggleChat() {
+                const chat = document.getElementById('chat-window');
+                chat.classList.toggle('hidden');
+
+                if (!chat.classList.contains('hidden')) {
+                    if (!chat3dInitialized) {
+                        initChat3D();
+                        chat3dInitialized = true;
+                    }
+                    if (!chatBgInitialized) {
+                        // Small delay to ensure container has dimensions
+                        setTimeout(() => {
+                            initChatBg3D();
+                            chatBgInitialized = true;
+                        }, 100);
+                    }
+                }
+            }
+
+            function toggleChatFullScreen() {
+                const chat = document.getElementById('chat-window');
+                const icon = document.getElementById('chat-expand-icon');
+                const isFull = chat.classList.contains('fixed');
+
+                if (isFull) {
+                    // Minimize
+                    chat.classList.remove('fixed', 'inset-0', 'z-[100]', 'rounded-none');
+                    chat.classList.add('absolute', 'bottom-16', 'right-0', 'w-80', 'h-96', 'rounded-lg');
+                    icon.classList.replace('fa-compress', 'fa-expand');
+                } else {
+                    // Maximize
+                    chat.classList.remove('absolute', 'bottom-16', 'right-0', 'w-80', 'h-96', 'rounded-lg');
+                    chat.classList.add('fixed', 'inset-0', 'z-[100]', 'rounded-none');
+                    icon.classList.replace('fa-expand', 'fa-compress');
+                }
+            }
+
+            function handleChat(e) {
+                e.preventDefault();
+                const input = document.getElementById('chat-input');
+                const container = document.getElementById('chat-messages');
+                const msg = input.value.trim();
+                if (!msg) return;
+
+                container.innerHTML += `<div class="flex justify-end"><div class="bg-gray-100 dark:bg-white/10 p-3 rounded-lg rounded-tr-none max-w-[85%] text-xs shadow-sm dark:shadow-none">${msg}</div></div>`;
+                input.value = '';
+                container.scrollTop = container.scrollHeight;
+
+                setTimeout(() => {
+                    container.innerHTML += `<div class="flex justify-start"><div class="bg-gray-100 dark:bg-white/5 p-3 rounded-lg rounded-tl-none max-w-[85%] text-xs shadow-sm dark:shadow-none">Command received. Processing...</div></div>`;
+                    container.scrollTop = container.scrollHeight;
+                }, 500);
+            }
+
+            function updateClock() {
+                const now = new Date();
+                document.getElementById('clock').innerText = now.toISOString().split('T')[1].split('.')[0] + ' UTC';
+            }
+            setInterval(updateClock, 1000);
+
+            // --- Init ---
+            document.addEventListener('DOMContentLoaded', () => {
+                init3D();
+                initCharts();
+                loadSavedPlugins();
+
+                updateClock();
+
+                // Fetch initial data
+                fetchDashboardData();
+                // Poll every 5 seconds
+                setInterval(fetchDashboardData, 5000);
+
+                // Security: Disable shortcuts & Right Click
+                document.addEventListener('contextmenu', (e) => {
+                    e.preventDefault();
+                    showToast('Security Alert: Context Menu Disabled');
+                });
+
+                document.addEventListener('copy', (e) => {
+                    e.preventDefault();
+                    showToast('Security Alert: Copying Disabled');
+                });
+
+                document.addEventListener('selectstart', (e) => {
+                    // e.preventDefault(); // Optional: completely block selection
+                    // showToast('Security Alert: Selection Disabled'); 
+                    // Note: selectstart fires on click sometimes, might be too aggressive. 
+                    // Relying on copy event and user-select:none CSS.
+                });
+
+                document.addEventListener('keydown', (e) => {
+                    // PrintScreen
+                    if (e.key === 'PrintScreen') {
+                        showToast('Security Alert: Screenshot Detected');
+                        // Optional: Blur screen momentarily
+                        document.body.style.filter = 'blur(20px)';
+                        setTimeout(() => document.body.style.filter = 'none', 1000);
+                    }
+
+                    // Function Keys (F1-F12)
+                    if (e.key.startsWith('F') && !isNaN(e.key.substring(1))) {
+                        e.preventDefault();
+                        showToast(`Security Alert: Function Key ${e.key} Disabled`);
+                    }
+
+                    // DevTools (Ctrl+Shift+I/J/C) or View Source (Ctrl+U) or Save (Ctrl+S)
+                    if (
+                        (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J' || e.key === 'C')) ||
+                        (e.ctrlKey && e.key === 'u') ||
+                        (e.ctrlKey && e.key === 's')
+                    ) {
+                        e.preventDefault();
+                        showToast('Security Alert: Developer Tools Disabled');
+                    }
+                });
+
+                // Initialize Drag and Drop
+                initDragAndDrop();
+
+                // Search Input Listener for dashboard logs
+                const searchInput = document.querySelector('#widget-table-logs input[placeholder="Search logs..."]');
+                if (searchInput) {
+                    searchInput.addEventListener('change', async (e) => {
+                        const q = e.target.value;
+                        if (q.length > 0) {
+                            try {
+                                const res = await fetch(`/api/logs/search?q=${encodeURIComponent(q)}&limit=50`);
+                                if (res.ok) {
+                                    const data = await res.json();
+                                    SYSTEM_LOGS = data.logs.map(log => ({
+                                        time: new Date(log.recv_time).toISOString().replace('T', ' ').split('.')[0],
+                                        timestamp: new Date(log.recv_time),
+                                        level: log.source === 'suricata' ? 'CRIT' : 'INFO',
+                                        source: log.source,
+                                        msg: log.content
+                                    }));
+                                    renderSecureLogs();
+                                }
+                            } catch (err) {
+                                console.error(err);
+                            }
+                        } else {
+                            // Reload default logs for dashboard widget
+                            fetchDashboardData();
+                        }
+                    });
+                }
+            });
+
+            // --- Drag and Drop Logic ---
+            let draggedItem = null;
+            let currentDropZone = null;
+
+            // Store default layout on load
+            const defaultLayout = {};
+
+            function initDragAndDrop() {
+                const draggables = document.querySelectorAll('.draggable-widget');
+                const dropZones = document.querySelectorAll('.drop-zone');
+
+                // Capture default layout
+                dropZones.forEach(zone => {
+                    defaultLayout[zone.id] = Array.from(zone.children).map(child => child.id).filter(id => id);
+                });
+
+                // Add main container as drop zone for System Logs flexibility
+                const mainContainer = document.querySelector('main');
+                if (mainContainer) {
+                    mainContainer.classList.add('drop-zone');
+                    mainContainer.dataset.zone = 'main-root'; // Use a distinct data-zone for the main container
+                    defaultLayout['main-root'] = Array.from(mainContainer.children).map(child => child.id).filter(id => id);
+                }
+
+                draggables.forEach(draggable => {
+                    attachDragListeners(draggable);
+                });
+
+                // Re-select drop zones including new main
+                const allDropZones = document.querySelectorAll('.drop-zone');
+
+                allDropZones.forEach(zone => {
+                    zone.addEventListener('dragover', (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+
+                        if (draggedItem && draggedItem.contains(zone)) return;
+
+                        const afterElement = getDragAfterElement(zone, e.clientY, e.clientX);
+
+                        zone.classList.add('drag-over');
+
+                        if (afterElement == null) {
+                            zone.appendChild(draggedItem);
+                        } else {
+                            zone.insertBefore(draggedItem, afterElement);
+                        }
+                    });
+
+                    zone.addEventListener('dragleave', () => {
+                        zone.classList.remove('drag-over');
+                    });
+
+                    zone.addEventListener('drop', (e) => {
+                        e.preventDefault();
+                        zone.classList.remove('drag-over');
+                        saveLayout();
+                    });
+                });
+
+                loadLayout();
+            }
+
+            function getDragAfterElement(container, y, x) {
+                const draggableElements = [...container.querySelectorAll('.draggable-widget:not(.dragging)')];
+
+                return draggableElements.reduce((closest, child) => {
+                    const box = child.getBoundingClientRect();
+                    const offsetX = x - (box.left + box.width / 2);
+                    const offsetY = y - (box.top + box.height / 2);
+
+                    const isRow = window.getComputedStyle(container).flexDirection === 'row' ||
+                        container.classList.contains('grid');
+
+                    if (isRow) {
+                        if (offsetX < 0 && offsetX > closest.offset) {
+                            return { offset: offsetX, element: child };
+                        }
+                    } else {
+                        if (offsetY < 0 && offsetY > closest.offset) {
+                            return { offset: offsetY, element: child };
+                        }
+                    }
+                    return closest;
+                }, { offset: Number.NEGATIVE_INFINITY }).element;
+            }
+
+            function toggleSidebar() {
+                const sidebar = document.getElementById('sidebar');
+                const main = document.getElementById('main-container');
+
+                // Determine if currently visible based on screen size and classes
+                const isMd = window.innerWidth >= 768;
+                const hasMdClass = sidebar.classList.contains('md:translate-x-0');
+                const hasHiddenClass = sidebar.classList.contains('-translate-x-full');
+
+                let isVisible;
+                if (isMd) {
+                    // On desktop, it's visible if it has the md override
+                    isVisible = hasMdClass;
+                } else {
+                    // On mobile, it's visible if it doesn't have the hidden class
+                    isVisible = !hasHiddenClass;
+                }
+
+                if (isVisible) {
+                    // CLOSE
+                    sidebar.classList.add('-translate-x-full');
+                    sidebar.classList.remove('md:translate-x-0');
+                    main.classList.remove('md:pl-64');
+                } else {
+                    // OPEN
+                    sidebar.classList.remove('-translate-x-full');
+                    sidebar.classList.add('md:translate-x-0');
+                    main.classList.add('md:pl-64');
+                }
+            }
+
+            function switchView(viewId) {
+                // Hide all views
+                document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
+
+                // Show selected view
+                const view = document.getElementById('view-' + viewId);
+                if (view) view.classList.remove('hidden');
+
+                // Update Sidebar Active State
+                document.querySelectorAll('#sidebar button').forEach(btn => {
+                    btn.classList.remove('text-green-500', 'border-green-500', 'bg-white/5', 'opacity-100');
+                    btn.classList.add('opacity-70', 'border-transparent');
+                });
+
+                const activeBtn = document.getElementById('nav-' + viewId);
+                if (activeBtn) {
+                    activeBtn.classList.remove('opacity-70', 'border-transparent');
+                    activeBtn.classList.add('text-green-500', 'border-green-500', 'bg-white/5', 'opacity-100');
+                }
+
+                // Trigger specific view loads
+                if (viewId === 'logs') {
+                    fetchSystemLogs();
+                } else if (viewId === 'devices') {
+                    fetchDevices();
+                } else if (viewId === 'plugins') {
+                    // Plugins are loaded on startup, but we can refresh
+                    loadSavedPlugins();
+                } else if (viewId === 'dashboard') {
+                    fetchDashboardData();
+                } else if (viewId === 'sigma') {
+                    initSigmaEditor();
+                }
+            }
+
+            // --- System Logs View Logic ---
+            let currentLogSource = 'linux';
+            let allLogsCache = []; // Store all 500 logs here
+            let currentLogPage = 1;
+            const LOGS_PER_PAGE = 10;
+
+            function setLogSource(source) {
+                currentLogSource = source;
+                currentLogPage = 1;
+
+                // Update UI Buttons
+                const btnLinux = document.getElementById('btn-source-linux');
+                const btnWindows = document.getElementById('btn-source-windows');
+
+                if (source === 'linux') {
+                    btnLinux.classList.add('bg-white/10', 'text-white', 'shadow');
+                    btnLinux.classList.remove('opacity-60');
+                    btnWindows.classList.remove('bg-white/10', 'text-white', 'shadow');
+                    btnWindows.classList.add('opacity-60');
+                } else {
+                    btnWindows.classList.add('bg-white/10', 'text-white', 'shadow');
+                    btnWindows.classList.remove('opacity-60');
+                    btnLinux.classList.remove('bg-white/10', 'text-white', 'shadow');
+                    btnLinux.classList.add('opacity-60');
+                }
+
+                fetchSystemLogs();
+            }
+
+            async function fetchSystemLogs() {
+                const tbody = document.getElementById('full-logs-body');
+                const paginationInfo = document.getElementById('logs-pagination-info');
+
+                if (!tbody) return;
+
+                // Show loading state
+                tbody.innerHTML = '<tr><td colspan="5" class="p-8 text-center opacity-50"><i class="fas fa-circle-notch fa-spin mr-2"></i> Loading logs...</td></tr>';
+
+                try {
+                    // Fetch 500 logs as requested
+                    const res = await fetch(`/api/logs/?source=${currentLogSource}&limit=500&offset=0`);
+                    if (res.ok) {
+                        const data = await res.json();
+                        allLogsCache = data.logs || [];
+                        renderLogsPage();
+                    } else {
+                        tbody.innerHTML = '<tr><td colspan="5" class="p-8 text-center text-red-500">Failed to load logs</td></tr>';
+                    }
+                } catch (e) {
+                    console.error(e);
+                    tbody.innerHTML = '<tr><td colspan="5" class="p-8 text-center text-red-500">Error connecting to server</td></tr>';
+                }
+            }
+
+            function renderLogsPage() {
+                const tbody = document.getElementById('full-logs-body');
+                const paginationInfo = document.getElementById('logs-pagination-info');
+                const btnPrev = document.getElementById('btn-prev-page');
+                const btnNext = document.getElementById('btn-next-page');
+
+                if (!allLogsCache.length) {
+                    tbody.innerHTML = '<tr><td colspan="5" class="p-8 text-center opacity-50">No logs found</td></tr>';
+                    paginationInfo.innerText = 'Showing 0-0 of 0';
+                    btnPrev.disabled = true;
+                    btnNext.disabled = true;
+                    return;
+                }
+
+                // Calculate slice
+                const start = (currentLogPage - 1) * LOGS_PER_PAGE;
+                const end = start + LOGS_PER_PAGE;
+                const pageLogs = allLogsCache.slice(start, end);
+
+                tbody.innerHTML = pageLogs.map(log => {
+                    const time = new Date(log.recv_time).toLocaleString();
+                    // Highlight keywords for effect
+                    let content = log.content
+                        .replace(/error/gi, '<span class="text-red-400 font-bold">ERROR</span>')
+                        .replace(/failed/gi, '<span class="text-red-400 font-bold">FAILED</span>')
+                        .replace(/warning/gi, '<span class="text-yellow-400 font-bold">WARNING</span>');
+
+                    return `
+                        <tr class="table-row transition-colors group">
+                            <td class="p-4 border-b border-white/5 text-xs opacity-60">#${log.id}</td>
+                            <td class="p-4 border-b border-white/5">
+                                <span class="px-2 py-1 rounded bg-white/5 text-[10px] font-bold uppercase tracking-wider ${log.source === 'linux' ? 'text-yellow-500' : 'text-blue-500'}">
+                                    ${log.source}
+                                </span>
+                            </td>
+                            <td class="p-4 border-b border-white/5 text-xs font-mono break-all max-w-xl">
+                                ${content}
+                            </td>
+                            <td class="p-4 border-b border-white/5 text-xs opacity-60 whitespace-nowrap">${time}</td>
+                            <td class="p-4 border-b border-white/5 text-right">
+                                <div class="flex flex-col items-end">
+                                    <span class="text-xs font-bold">${log.server.hostname}</span>
+                                    <span class="text-[10px] opacity-50 font-mono">${log.server.ip_address}</span>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+
+                // Update Pagination Controls
+                const total = allLogsCache.length;
+                const showingEnd = Math.min(end, total);
+                paginationInfo.innerText = `Showing ${start + 1}-${showingEnd} of ${total}`;
+
+                btnPrev.disabled = currentLogPage === 1;
+                btnNext.disabled = end >= total;
+            }
+
+            function changeLogPage(delta) {
+                currentLogPage += delta;
+                renderLogsPage();
+            }
+
+            async function fetchDevices() {
+                const tbody = document.getElementById('network-devices-body');
+                if (!tbody) return;
+
+                try {
+                    const res = await fetch('/api/servers');
+                    if (res.ok) {
+                        const data = await res.json();
+                        tbody.innerHTML = '';
+                        data.servers.forEach(server => {
+                            const tr = document.createElement('tr');
+                            tr.className = 'table-row transition-colors hover:bg-white/5';
+                            tr.innerHTML = `
+                                <td class="p-3 font-medium">${server.hostname}</td>
+                                <td class="p-3 font-mono opacity-70">${server.ip_address}</td>
+                                <td class="p-3 opacity-60">${server.server_type || 'Unknown'}</td>
+                                <td class="p-3 text-right"><span class="w-2 h-2 rounded-full ${server.status === 'online' ? 'bg-green-500' : 'bg-red-500'} inline-block"></span></td>
+                                <td class="p-3 text-right font-mono text-xs">${server.stats.total_logs}</td>
+                            `;
+                            tbody.appendChild(tr);
+                        });
+                    }
+                } catch (e) {
+                    console.error(e);
+                }
+            }
+
+            // Update search listener for full logs
+            document.getElementById('full-logs-search')?.addEventListener('change', async (e) => {
+                const q = e.target.value;
+                const tbody = document.getElementById('full-logs-body');
+                if (!tbody) return;
+
+                try {
+                    const res = await fetch(`/api/logs/search?q=${encodeURIComponent(q)}&limit=100`);
+                    if (res.ok) {
+                        const data = await res.json();
+                        tbody.innerHTML = '';
+                        data.logs.forEach(log => {
+                            // ... same rendering logic ...
+                            const tr = document.createElement('tr');
+                            tr.className = 'table-row transition-colors hover:bg-white/5';
+                            let levelClass = 'font-bold';
+                            if (log.source === 'suricata') levelClass += ' text-red-500';
+                            tr.innerHTML = `
+                                <td class="p-4 border-b border-white/5 opacity-70 whitespace-nowrap">${new Date(log.recv_time).toLocaleString()}</td>
+                                <td class="p-4 border-b border-white/5 ${levelClass}">${log.source === 'suricata' ? 'CRITICAL' : 'INFO'}</td>
+                                <td class="p-4 border-b border-white/5">${log.source}</td>
+                                <td class="p-4 border-b border-white/5 opacity-80 font-mono text-xs">${log.content}</td>
+                                <td class="p-4 border-b border-white/5 text-right opacity-60">${log.server.id}</td>
+                             `;
+                            tbody.appendChild(tr);
+                        });
+                    }
+                } catch (e) { console.error(e); }
+            });
+
+            // --- Widget Library Logic ---
+            const removedWidgets = new Set();
+            const selectedWidgetsToRestore = new Set();
+
+            const widgetNames = {
+                'widget-stat-online': 'Online Devices Stat',
+                'widget-stat-alerts': 'Critical Alerts Stat',
+                'widget-stat-threat': 'Threat Level Stat',
+                'widget-stat-load': 'Network Load Stat',
+                'widget-chart-events': 'Event Velocity Chart',
+                'widget-table-devices': 'Discovered Devices Table',
+                'widget-integrations': 'Integrations Panel',
+                'widget-stats-auth': 'Auth Statistics',
+                'widget-chart-alerts': 'Alert Distribution Chart',
+                'widget-chart-mitre': 'MITRE ATT&CK Chart',
+                'widget-list-hardware': 'Hardware Detection List',
+                'widget-table-logs': 'System Logs Table'
+            };
+
+            function toggleWidgetLibrary() {
+                const modal = document.getElementById('widget-library');
+                modal.classList.toggle('hidden');
+                selectedWidgetsToRestore.clear(); // Clear selection on open/close
+                renderWidgetLibrary();
+            }
+
+            function removeWidget(id) {
+                const widget = document.getElementById(id);
+                if (widget) {
+                    widget.style.display = 'none';
+                    removedWidgets.add(id);
+                    showToast('Widget Removed');
+                    saveLayout();
+                }
+            }
+
+            function toggleWidgetSelection(id) {
+                if (selectedWidgetsToRestore.has(id)) {
+                    selectedWidgetsToRestore.delete(id);
+                } else {
+                    selectedWidgetsToRestore.add(id);
+                }
+                renderWidgetLibrary();
+            }
+
+            function restoreSelectedWidgets() {
+                if (selectedWidgetsToRestore.size === 0) {
+                    showToast('No widgets selected', 'warning');
+                    return;
+                }
+
+                selectedWidgetsToRestore.forEach(id => {
+                    const widget = document.getElementById(id);
+                    if (widget) {
+                        widget.style.display = '';
+                        removedWidgets.delete(id);
+
+                        // Add highlight animation
+                        widget.classList.add('ring', 'ring-green-500');
+                        setTimeout(() => widget.classList.remove('ring', 'ring-green-500'), 1000);
+                    }
+                });
+
+                showToast(`${selectedWidgetsToRestore.size} Widgets Restored`, 'success');
+                selectedWidgetsToRestore.clear();
+                toggleWidgetLibrary();
+                saveLayout();
+            }
+
+            function renderWidgetLibrary() {
+                const container = document.getElementById('removed-widgets-list');
+                container.innerHTML = '';
+
+                if (removedWidgets.size === 0) {
+                    container.innerHTML = `
+                        <div class="col-span-2 text-center py-8 opacity-40 italic flex flex-col items-center gap-2">
+                            <i class="fas fa-check-circle text-2xl"></i>
+                            <span>All widgets are currently active.</span>
+                        </div>`;
+                    return;
+                }
+
+                removedWidgets.forEach(id => {
+                    const name = widgetNames[id] || 'Unknown Widget';
+                    const isSelected = selectedWidgetsToRestore.has(id);
+
+                    const el = document.createElement('div');
+                    el.className = `panel p-4 rounded border ${isSelected ? 'border-green-500 bg-green-500/10' : 'border-white/10'} flex justify-between items-center hover:bg-white/5 transition-colors group cursor-pointer select-none`;
+                    el.onclick = () => toggleWidgetSelection(id);
+                    el.innerHTML = `
+                        <div class="flex items-center gap-3">
+                            <div class="w-4 h-4 rounded border ${isSelected ? 'border-green-500 bg-green-500' : 'border-white/30'} flex items-center justify-center transition-colors">
+                                ${isSelected ? '<i class="fas fa-check text-[10px] text-black"></i>' : ''}
+                            </div>
+                            <span class="font-mono text-xs font-bold ${isSelected ? 'text-green-500' : ''}">${name}</span>
+                        </div>
+                    `;
+                    container.appendChild(el);
+                });
+            }
+
+            // --- Persistence & Reset ---
+            function saveLayout() {
+                const layout = {};
+                document.querySelectorAll('.drop-zone').forEach(zone => {
+                    const key = zone.id || zone.dataset.zone;
+                    if (key) { // Ensure key exists
+                        layout[key] = Array.from(zone.children)
+                            .filter(child => child.classList.contains('draggable-widget'))
+                            .map(child => child.id);
+                    }
+                });
+                layout.removed = Array.from(removedWidgets);
+                localStorage.setItem('sentinel_layout', JSON.stringify(layout));
+            }
+
+            function loadLayout() {
+                const saved = localStorage.getItem('sentinel_layout');
+                if (!saved) return;
+
+                try {
+                    const layout = JSON.parse(saved);
+
+                    // Restore Removed Widgets
+                    if (layout.removed) {
+                        removedWidgets.clear();
+                        layout.removed.forEach(id => {
+                            const el = document.getElementById(id);
+                            if (el) {
+                                el.style.display = 'none';
+                                removedWidgets.add(id);
+                            }
+                        });
+                    }
+
+                    // Re-add widgets to their respective zones in order
+                    Object.keys(layout).forEach(zoneId => {
+                        if (zoneId === 'removed') return;
+
+                        let zone;
+                        if (zoneId === 'main-root') {
+                            zone = document.querySelector('main');
+                        } else {
+                            zone = document.getElementById(zoneId);
+                        }
+
+                        if (zone && Array.isArray(layout[zoneId])) {
+                            layout[zoneId].forEach(widgetId => {
+                                const widget = document.getElementById(widgetId);
+                                if (widget) {
+                                    // Ensure widget is visible if it's being placed (unless it's in removed set, which we handled above?
+                                    // Actually if it's in removed set, display is none.
+                                    // But if it's in the zone list, it implies it should be there.
+                                    // Conflict: A widget might be in 'removed' list AND in 'zone' list if save logic was weird.
+                                    // Priority: If it is in removedWidgets, keep it hidden.
+
+                                    if (!removedWidgets.has(widgetId)) {
+                                        widget.style.display = '';
+                                        zone.appendChild(widget);
+                                    }
+                                }
+                            });
+                        }
+                    });
+                } catch (e) {
+                    console.error('Failed to load layout', e);
+                    // Optionally, clear corrupted layout
+                    localStorage.removeItem('sentinel_layout');
+                }
+            }
+
+            function resetLayout() {
+                // 1. Clear Local Storage
+                localStorage.removeItem('sentinel_layout');
+
+                // 2. Restore Removed Widgets
+                removedWidgets.forEach(id => {
+                    const widget = document.getElementById(id);
+                    if (widget) widget.style.display = '';
+                });
+                removedWidgets.clear();
+                selectedWidgetsToRestore.clear(); // Clear selection list
+
+                // 3. Move widgets back to default zones in default order
+                Object.keys(defaultLayout).forEach(zoneId => {
+                    let zone;
+                    if (zoneId === 'main-root') {
+                        zone = document.querySelector('main');
+                    } else {
+                        zone = document.getElementById(zoneId);
+                    }
+
+                    if (zone && defaultLayout[zoneId]) {
+                        defaultLayout[zoneId].forEach(widgetId => {
+                            const widget = document.getElementById(widgetId);
+                            if (widget) {
+                                zone.appendChild(widget);
+                            }
+                        });
+                    }
+                });
+
+                showToast('Layout Reset to Default', 'success');
+
+                // Close modal immediately
+                const modal = document.getElementById('widget-library');
+                if (modal) {
+                    modal.classList.add('hidden');
+                }
+                updateResetButtonState();
+            }
+
+            // --- Plugin Upload Logic (Hybrid: Local + Server) ---
+            function triggerPluginUpload() {
+                document.getElementById('plugin-upload-input').click();
+            }
+
+            async function handlePluginUpload(input) {
+                const file = input.files[0];
+                if (!file) return;
+
+                const isPython = file.name.endsWith('.py');
+
+                // 1. Immediate Local Load (Frontend) - ONLY FOR HTML
+                if (!isPython) {
+                    const reader = new FileReader();
+                    reader.onload = function (e) {
+                        const content = e.target.result;
+                        const existing = document.querySelector(`[data-plugin-name="${file.name}"]`);
+                        if (!existing) {
+                            addPluginToDashboard(content, file.name);
+                        }
+                    };
+                    reader.readAsText(file);
+                }
+
+                // 2. Upload to Server (Backend Persistence)
+                const formData = new FormData();
+                formData.append('file', file);
+
+                try {
+                    const response = await fetch('/api/plugins/upload', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    if (!response.ok) throw new Error('Upload failed');
+
+                    const data = await response.json();
+
+                    if (data.type === 'backend') {
+                        // addBackendPluginToDashboard(data.name); // Wait for socket event to get actual plugin name
+                        showToast('Backend Plugin Uploaded. Initializing...', 'success');
+                    } else {
+                        showToast('Plugin Uploaded & Saved', 'success');
+                    }
+                } catch (error) {
+                    console.error(error);
+                    if (isPython) {
+                        showToast('Upload failed. Backend plugins require server connection.', 'error');
+                    } else {
+                        showToast('Local load only (Server upload failed)', 'warning');
+                    }
+                }
+
+                input.value = ''; // Reset
+            }
+
+            // --- Socket.IO Integration for Plugins ---
+
+            const socket = io();
+
+            socket.on('plugin_added', (data) => {
+                console.log("New Plugin Received:", data.name);
+
+                // Check if we already have this widget to avoid duplicates
+                const existing = document.querySelector(`[data-plugin-name="${data.name}"]`);
+                if (!existing) {
+                    addPluginToDashboard(data.content, data.name);
+                }
+            });
+
+            // --- Load Saved Plugins on Startup ---
+            // --- Load Saved Plugins on Startup ---
+            async function loadSavedPlugins() {
+                // 1. Load HTML Plugins (Frontend)
+                try {
+                    const response = await fetch('/api/plugins/list');
+                    const plugins = await response.json();
+
+                    plugins.forEach(plugin => {
+                        setTimeout(() => {
+                            const existing = document.querySelector(`[data-plugin-name="${plugin.name}"]`);
+                            if (!existing) {
+                                addPluginToDashboard(plugin.content, plugin.name);
+                            }
+                        }, 100);
+                    });
+                } catch (e) {
+                    console.error("Could not load HTML plugins:", e);
+                }
+
+                // 2. Load Python Plugins (Backend)
+                try {
+                    const response = await fetch('/api/plugins/backend/list');
+                    const plugins = await response.json();
+
+                    plugins.forEach(plugin => {
+                        addBackendPluginToDashboard(plugin.name);
+                    });
+                } catch (e) {
+                    console.error("Could not load backend plugins:", e);
+                }
+            }
+
+            socket.on('backend_plugin_added', (data) => {
+                console.log("New Backend Plugin:", data.name);
+                addBackendPluginToDashboard(data.name);
+                showToast(`Backend Plugin Loaded: ${data.name}`, 'success');
+            });
+
+            function attachDragListeners(draggable) {
+                draggable.addEventListener('dragstart', (e) => {
+                    draggedItem = draggable;
+                    e.stopPropagation();
+                    setTimeout(() => draggable.classList.add('dragging'), 0);
+                });
+
+                draggable.addEventListener('dragend', () => {
+                    draggable.classList.remove('dragging');
+                    draggedItem = null;
+                    document.querySelectorAll('.drop-zone').forEach(zone => zone.classList.remove('drag-over'));
+                    saveLayout();
+                });
+            }
+
+            function addBackendPluginToDashboard(name) {
+                // 1. Add to Plugin System View
+                const container = document.getElementById('plugins-list-container');
+                if (container) {
+                    const existing = Array.from(container.children).find(child => child.innerText.includes(name));
+                    if (!existing) {
+                        const item = document.createElement('div');
+                        item.className = 'panel bg-white/5 border border-white/10 p-6 rounded-lg flex flex-col items-center gap-4 group cursor-pointer hover:bg-white/10 transition-all relative overflow-hidden';
+                        item.innerHTML = `
+                            <div class="absolute top-2 right-2 w-2 h-2 rounded-full bg-yellow-500"></div>
+                            <i class="fab fa-python text-5xl opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-all text-yellow-500"></i>
+                            <h3 class="font-display font-bold text-lg">${name}</h3>
+                            <span class="text-xs font-mono opacity-60">Backend Plugin</span>
+                        `;
+                        container.appendChild(item);
+                    }
+                }
+
+                // 2. Add to Dashboard Integrations Tile
+                const integrationsGrid = document.getElementById('integrations-grid');
+                if (integrationsGrid) {
+                    const noMsg = document.getElementById('no-plugins-msg');
+                    if (noMsg) noMsg.remove();
+
+                    const existing = Array.from(integrationsGrid.children).find(child => child.innerText.includes(name));
+                    if (!existing) {
+                        const item = document.createElement('div');
+                        item.className = 'panel bg-white/5 border border-white/10 p-4 rounded-lg flex flex-col items-center gap-3 group cursor-pointer hover:bg-white/10 transition-all relative overflow-hidden';
+                        item.innerHTML = `
+                            <div class="absolute top-2 right-2 w-2 h-2 rounded-full bg-yellow-500"></div>
+                            <i class="fab fa-python text-3xl opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-all"></i>
+                            <span class="text-xs font-mono font-bold">${name}</span>
+                        `;
+                        integrationsGrid.appendChild(item);
+                    }
+                }
+            }
+
+            function addPluginToDashboard(content, fileName) {
+                // 1. Add to Plugin System View
+                const container = document.getElementById('plugins-list-container');
+                if (container) {
+                    const item = document.createElement('div');
+                    item.className = 'panel bg-white/5 border border-white/10 p-6 rounded-lg flex flex-col items-center gap-4 group cursor-pointer hover:bg-white/10 transition-all relative overflow-hidden';
+                    item.innerHTML = `
+                        <div class="absolute top-2 right-2 w-2 h-2 rounded-full bg-blue-500"></div>
+                        <i class="fas fa-code text-5xl opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-all text-blue-500"></i>
+                        <h3 class="font-display font-bold text-lg">${fileName}</h3>
+                        <span class="text-xs font-mono opacity-60">Frontend Plugin</span>
+                    `;
+                    item.onclick = () => {
+                        const win = window.open("", "Plugin Preview", "width=600,height=400");
+                        win.document.write(content);
+                    };
+                    container.appendChild(item);
+                }
+
+                // 2. Add to Dashboard Integrations Tile
+                const integrationsGrid = document.getElementById('integrations-grid');
+                if (integrationsGrid) {
+                    const noMsg = document.getElementById('no-plugins-msg');
+                    if (noMsg) noMsg.remove();
+
+                    const item = document.createElement('div');
+                    item.className = 'panel bg-white/5 border border-white/10 p-4 rounded-lg flex flex-col items-center gap-3 group cursor-pointer hover:bg-white/10 transition-all relative overflow-hidden';
+                    item.innerHTML = `
+                        <div class="absolute top-2 right-2 w-2 h-2 rounded-full bg-blue-500"></div>
+                        <i class="fas fa-puzzle-piece text-3xl opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-all"></i>
+                        <span class="text-xs font-mono font-bold">${fileName.replace('.html', '')}</span>
+                    `;
+                    integrationsGrid.appendChild(item);
+                }
+            }
+
+            function handleDecryptFileSelect(input) {
+                const file = input.files[0];
+                if (!file) return;
+
+                const statusDiv = document.getElementById('decrypt-status');
+                const filenameEl = document.getElementById('decrypt-filename');
+                const statusText = document.getElementById('decrypt-status-text');
+                const progress = document.getElementById('decrypt-progress');
+                const actions = document.getElementById('decrypt-actions');
+
+                statusDiv.classList.remove('hidden');
+                actions.classList.add('hidden');
+                filenameEl.innerText = file.name;
+                statusText.innerText = 'Decrypting...';
+                statusText.className = 'text-xs font-bold text-yellow-500';
+                progress.style.width = '0%';
+
+                // Simulate Decryption Process
+                let width = 0;
+                const interval = setInterval(() => {
+                    width += 5;
+                    progress.style.width = width + '%';
+
+                    if (width >= 100) {
+                        clearInterval(interval);
+                        statusText.innerText = 'Decryption Complete';
+                        statusText.className = 'text-xs font-bold text-green-500';
+                        actions.classList.remove('hidden');
+                        showToast('File Decrypted Successfully', 'success');
+                    }
+                }, 100);
+            }
+
+            function handleLogFileSelect(input) {
+                const file = input.files[0];
+                if (!file) return;
+
+                const statusDiv = document.getElementById('log-upload-status');
+                const filenameEl = document.getElementById('log-filename');
+                const statusText = document.getElementById('log-status-text');
+                const progress = document.getElementById('log-progress');
+                const successMsg = document.getElementById('log-success-msg');
+
+                statusDiv.classList.remove('hidden');
+                successMsg.classList.add('hidden');
+                filenameEl.innerText = file.name;
+                statusText.innerText = 'Uploading...';
+                statusText.className = 'text-xs font-bold text-blue-500';
+                progress.style.width = '0%';
+
+                // Simulate Upload Process
+                let width = 0;
+                const interval = setInterval(() => {
+                    width += 10;
+                    progress.style.width = width + '%';
+
+                    if (width >= 100) {
+                        clearInterval(interval);
+                        statusText.innerText = 'Processing...';
+                        setTimeout(() => {
+                            statusText.innerText = 'Complete';
+                            statusText.className = 'text-xs font-bold text-green-500';
+                            successMsg.classList.remove('hidden');
+                            showToast('Log File Uploaded', 'success');
+
+                            // Refresh logs if we are on logs page (optional)
+                            // fetchSystemLogs(); 
+                        }, 1000);
+                    }
+                }, 200);
+            }
+        </script>
+        <!-- Report Selection Modal -->
+        <div id="report-modal"
+            class="fixed inset-0 z-[70] flex items-center justify-center bg-black/80 backdrop-blur-sm hidden">
+            <div class="panel p-6 rounded-lg w-full max-w-lg flex flex-col gap-4 shadow-2xl relative">
+                <div class="flex justify-between items-center border-b border-white/10 pb-4">
+                    <h3 class="font-display font-bold text-xl">Generate Report</h3>
+                    <button onclick="closeReportModal()" class="opacity-60 hover:opacity-100 transition">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+
+                <p class="text-xs font-mono opacity-60">Select components to include in the PDF report:</p>
+
+                <div id="report-component-list"
+                    class="flex flex-col gap-2 max-h-60 overflow-y-auto custom-scrollbar p-1">
+                    <!-- Checkboxes will be injected here -->
+                </div>
+
+                <div class="flex justify-between items-center pt-4 border-t border-white/10">
+                    <div class="flex gap-2">
+                        <button onclick="toggleAllReportItems(true)"
+                            class="text-[10px] font-mono opacity-50 hover:opacity-100">Select All</button>
+                        <button onclick="toggleAllReportItems(false)"
+                            class="text-[10px] font-mono opacity-50 hover:opacity-100">Deselect All</button>
+                    </div>
+                    <button onclick="submitReportRequest()" id="btn-download-pdf"
+                        class="px-4 py-2 rounded bg-blue-600 text-white font-bold text-xs hover:bg-blue-500 transition shadow-lg flex items-center gap-2">
+                        <i class="fas fa-file-pdf"></i> Download PDF
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            // --- Report Generation Logic ---
+
+            function openReportModal() {
+                const modal = document.getElementById('report-modal');
+                const list = document.getElementById('report-component-list');
+                list.innerHTML = '';
+
+                // Find all widgets
+                const widgets = document.querySelectorAll('.draggable-widget');
+                widgets.forEach(widget => {
+                    const id = widget.id;
+                    // Try to find a title
+                    let title = id;
+                    const titleEl = widget.querySelector('h3, .text-xs.uppercase, .font-display');
+                    if (titleEl) title = titleEl.innerText.trim();
+
+                    const item = document.createElement('label');
+                    item.className = 'flex items-center gap-3 p-3 rounded bg-white/5 hover:bg-white/10 cursor-pointer transition';
+                    item.innerHTML = `
+                    <input type="checkbox" class="report-checkbox accent-blue-500" value="${id}" checked>
+                    <span class="text-sm font-mono truncate">${title}</span>
+                `;
+                    list.appendChild(item);
+                });
+
+                modal.classList.remove('hidden');
+            }
+
+            function closeReportModal() {
+                document.getElementById('report-modal').classList.add('hidden');
+            }
+
+            function toggleAllReportItems(checked) {
+                document.querySelectorAll('.report-checkbox').forEach(cb => cb.checked = checked);
+            }
+
+            async function submitReportRequest() {
+                const btn = document.getElementById('btn-download-pdf');
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+                btn.disabled = true;
+
+                try {
+                    const selectedIds = Array.from(document.querySelectorAll('.report-checkbox:checked')).map(cb => cb.value);
+                    const reportData = [];
+
+                    for (const id of selectedIds) {
+                        const widget = document.getElementById(id);
+                        if (!widget) continue;
+
+                        // Extract Title
+                        let title = "Untitled Component";
+                        const titleEl = widget.querySelector('h3, .text-xs.uppercase, .font-display');
+                        if (titleEl) title = titleEl.innerText.trim();
+
+                        const entry = {
+                            title: title,
+                            type: 'text',
+                            content: ''
+                        };
+
+                        // --- Specialized Scrapers ---
+
+                        // 1. Logs Table (widget-table-logs)
+                        if (id === 'widget-table-logs') {
+                            entry.type = 'table';
+                            const headers = ["Timestamp", "Severity", "Source", "Message"];
+                            const rows = [];
+                            // Scrape the visible rows
+                            const trs = widget.querySelectorAll('tbody tr');
+                            trs.forEach(tr => {
+                                const tds = tr.querySelectorAll('td');
+                                if (tds.length >= 4) {
+                                    rows.push([
+                                        tds[0].innerText.trim(),
+                                        tds[1].innerText.trim(),
+                                        tds[2].innerText.trim(),
+                                        tds[3].innerText.trim()
+                                    ]);
+                                }
+                            });
+                            entry.content = { headers, rows };
+                        }
+                        // 2. Hardware List (widget-list-hardware)
+                        else if (id === 'widget-list-hardware') {
+                            entry.type = 'table';
+                            const headers = ["Device", "Type", "Details", "Status"];
+                            const rows = [];
+                            // The hardware list uses divs, not a table. We need to parse the divs.
+                            // Structure: .flex.items-center... -> h4 (Name), span (Type), p (Details)
+                            const items = widget.querySelectorAll('.overflow-y-auto > div');
+                            items.forEach(item => {
+                                const name = item.querySelector('h4')?.innerText.trim() || '-';
+                                const type = item.querySelector('span')?.innerText.trim() || '-';
+                                const details = item.querySelector('p')?.innerText.trim() || '-';
+                                const status = item.querySelector('.bg-green-500') ? 'Active' : 'Idle'; // Simple heuristic
+                                rows.push([name, type, details, status]);
+                            });
+                            entry.content = { headers, rows };
+                        }
+                        // 3. Discovered Devices (widget-table-devices) - Standard Table
+                        else if (id === 'widget-table-devices') {
+                            entry.type = 'table';
+                            const table = widget.querySelector('table');
+                            if (table) {
+                                const headers = Array.from(table.querySelectorAll('thead th')).map(th => th.innerText.trim());
+                                const rows = Array.from(table.querySelectorAll('tbody tr')).map(tr => {
+                                    return Array.from(tr.querySelectorAll('td')).map(td => td.innerText.trim());
+                                });
+                                entry.content = { headers, rows };
+                            }
+                        }
+                        // 4. Charts (Canvas)
+                        else if (widget.querySelector('canvas')) {
+                            entry.type = 'image';
+                            const canvas = widget.querySelector('canvas');
+                            entry.content = canvas.toDataURL('image/png');
+                        }
+                        // 5. Stats
+                        else if (widget.querySelector('.text-3xl')) {
+                            entry.type = 'stat';
+                            const statValue = widget.querySelector('.text-3xl');
+                            const value = statValue.innerText.trim().replace(/\n/g, ' ');
+                            const subtext = widget.innerText.replace(title, '').replace(value, '').trim().replace(/\n/g, ' ');
+                            entry.content = { value, subtext };
+                        }
+                        // 6. Default Text Fallback
+                        else {
+                            entry.content = widget.innerText.replace(title, '').trim();
+                        }
+
+                        reportData.push(entry);
+                    }
+
+                    // Send to backend
+                    const response = await fetch('/api/report/generate', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ sections: reportData })
+                    });
+
+                    if (response.ok) {
+                        const blob = await response.blob();
+                        const url = window.URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.style.display = 'none';
+                        a.href = url;
+                        a.download = `sentinel_report_${Date.now()}.pdf`;
+                        document.body.appendChild(a);
+                        a.click();
+                        window.URL.revokeObjectURL(url);
+                        closeReportModal();
+                    } else {
+                        throw new Error('Server returned error');
+                    }
+
+                } catch (error) {
+                    console.error("Report generation failed:", error);
+                    alert("Failed to generate report. See console for details.");
+                } finally {
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                }
+            }
+
+            // Hook up the main button
+            function generateReport() {
+                openReportModal();
+            }
+            // --- Sigma Rule Editor Logic ---
+            let sigmaTreeData = [];
+            let currentSigmaPath = null;
+
+            async function initSigmaEditor() {
+                const container = document.getElementById('sigma-tree-container');
+                container.innerHTML = '<div class="text-center opacity-40 text-xs py-4"><i class="fas fa-circle-notch fa-spin mr-2"></i> Loading rules...</div>';
+
+                try {
+                    const res = await fetch('/api/sigma/tree');
+                    if (res.ok) {
+                        sigmaTreeData = await res.json();
+                        renderSigmaTree(sigmaTreeData, container);
+                    } else {
+                        container.innerHTML = '<div class="text-center text-red-500 text-xs py-4">Failed to load rules</div>';
+                    }
+                } catch (e) {
+                    console.error(e);
+                    container.innerHTML = '<div class="text-center text-red-500 text-xs py-4">Error connecting to server</div>';
+                }
+            }
+
+            function renderSigmaTree(nodes, container) {
+                container.innerHTML = '';
+                const ul = document.createElement('ul');
+                ul.className = 'pl-2 border-l border-white/5 ml-2 space-y-1';
+                if (container.id === 'sigma-tree-container') ul.className = 'space-y-1'; // Root level
+
+                nodes.forEach(node => {
+                    const li = document.createElement('li');
+
+                    if (node.type === 'directory') {
+                        li.innerHTML = `
+                            <div class="flex items-center gap-2 cursor-pointer hover:bg-white/5 p-1 rounded group" onclick="toggleFolder(this)">
+                                <i class="fas fa-folder text-yellow-500/80 group-hover:text-yellow-500 transition-colors text-xs"></i>
+                                <span class="text-xs opacity-80 group-hover:opacity-100 select-none">${node.name}</span>
+                                <i class="fas fa-chevron-right ml-auto text-[10px] opacity-40 transition-transform"></i>
+                            </div>
+                            <div class="hidden"></div>
+                        `;
+                        const subContainer = li.querySelector('div:last-child');
+                        if (node.children && node.children.length > 0) {
+                            renderSigmaTree(node.children, subContainer);
+                        } else {
+                            subContainer.innerHTML = '<div class="pl-4 text-[10px] opacity-30 py-1">Empty</div>';
+                        }
+                    } else {
+                        li.innerHTML = `
+                            <div class="flex items-center gap-2 cursor-pointer hover:bg-white/5 p-1 rounded group" 
+                                onclick="loadSigmaRuleContent('${node.path}', '${node.name}')">
+                                <i class="fas fa-file-code text-blue-500/80 group-hover:text-blue-500 transition-colors text-xs"></i>
+                                <span class="text-xs opacity-80 group-hover:opacity-100 truncate">${node.name}</span>
+                            </div>
+                        `;
+                    }
+                    ul.appendChild(li);
+                });
+                container.appendChild(ul);
+            }
+
+            function toggleFolder(element) {
+                const subContainer = element.nextElementSibling;
+                const arrow = element.querySelector('.fa-chevron-right');
+
+                if (subContainer.classList.contains('hidden')) {
+                    subContainer.classList.remove('hidden');
+                    arrow.classList.add('rotate-90');
+                } else {
+                    subContainer.classList.add('hidden');
+                    arrow.classList.remove('rotate-90');
+                }
+            }
+
+            async function loadSigmaRuleContent(path, name) {
+                currentSigmaPath = path;
+                const editor = document.getElementById('sigma-editor-content');
+                const filenameEl = document.getElementById('sigma-editor-filename');
+                const pathEl = document.getElementById('sigma-editor-path');
+                const btnSave = document.getElementById('btn-save-sigma');
+
+                filenameEl.innerText = name;
+                pathEl.innerText = path;
+                editor.value = 'Loading...';
+                editor.disabled = true;
+                btnSave.disabled = true;
+
+                try {
+                    const res = await fetch(`/api/sigma/rule?path=${encodeURIComponent(path)}`);
+                    if (res.ok) {
+                        const data = await res.json();
+                        editor.value = data.content;
+                        editor.disabled = false;
+                        btnSave.disabled = false;
+                    } else {
+                        editor.value = 'Failed to load content.';
+                    }
+                } catch (e) {
+                    console.error(e);
+                    editor.value = 'Error loading content.';
+                }
+            }
+
+            async function saveSigmaRule() {
+                if (!currentSigmaPath) return;
+
+                const editor = document.getElementById('sigma-editor-content');
+                const btnSave = document.getElementById('btn-save-sigma');
+                const content = editor.value;
+
+                btnSave.disabled = true;
+                btnSave.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Saving...';
+
+                try {
+                    const res = await fetch('/api/sigma/rule', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ path: currentSigmaPath, content: content })
+                    });
+
+                    if (res.ok) {
+                        showToast('Rule Saved Successfully', 'success');
+                    } else {
+                        showToast('Failed to save rule', 'error');
+                    }
+                } catch (e) {
+                    console.error(e);
+                    showToast('Error saving rule', 'error');
+                } finally {
+                    btnSave.disabled = false;
+                    btnSave.innerHTML = '<i class="fas fa-save"></i> Save Changes';
+                }
+            }
+
+            function filterSigmaTree(query) {
+                const container = document.getElementById('sigma-tree-container');
+                const items = container.querySelectorAll('li');
+
+                if (!query) {
+                    items.forEach(item => item.classList.remove('hidden'));
+                    return;
+                }
+
+                query = query.toLowerCase();
+                items.forEach(item => {
+                    const text = item.innerText.toLowerCase();
+                    // Simple logic: if item matches, show it. 
+                    // Ideally we should show parents if child matches, but for now simple filter.
+                    if (text.includes(query)) {
+                        item.classList.remove('hidden');
+                        // Ensure parents are visible (hacky but works for simple depth)
+                        let parent = item.parentElement.closest('li');
+                        while (parent) {
+                            parent.classList.remove('hidden');
+                            parent = parent.parentElement.closest('li');
+                        }
+                    } else {
+                        item.classList.add('hidden');
+                    }
+                });
+            }
+
+            // --- New Rule Creation ---
+            function openNewRuleModal() {
+                const modal = document.getElementById('new-rule-modal');
+                const select = document.getElementById('new-rule-folder');
+
+                // Flatten directories for selection
+                const dirs = [];
+                function traverse(nodes) {
+                    nodes.forEach(node => {
+                        if (node.type === 'directory') {
+                            dirs.push(node.path);
+                            if (node.children) traverse(node.children);
+                        }
+                    });
+                }
+                traverse(sigmaTreeData);
+
+                select.innerHTML = '<option value="" disabled selected>Select Folder...</option>';
+                dirs.forEach(d => {
+                    const opt = document.createElement('option');
+                    opt.value = d;
+                    opt.innerText = d;
+                    select.appendChild(opt);
+                });
+
+                modal.classList.remove('hidden');
+            }
+
+            async function createNewRule() {
+                const folder = document.getElementById('new-rule-folder').value;
+                const filename = document.getElementById('new-rule-filename').value;
+
+                if (!folder || !filename) {
+                    showToast('Please select a folder and enter a filename', 'warning');
+                    return;
+                }
+
+                if (!filename.endsWith('.yml')) {
+                    showToast('Filename must end with .yml', 'warning');
+                    return;
+                }
+
+                const fullPath = `${folder}/${filename}`;
+                const defaultContent = `title: New Rule
+id: ${crypto.randomUUID()}
+status: experimental
+description: Detects suspicious activity
+author: User
+date: ${new Date().toISOString().split('T')[0]}
+logsource:
+    product: ${folder.split('/')[0].toLowerCase()}
+detection:
+    selection:
+        EventID: 1
+    condition: selection
+level: medium`;
+
+                try {
+                    const res = await fetch('/api/sigma/rule', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ path: fullPath, content: defaultContent })
+                    });
+
+                    if (res.ok) {
+                        showToast('Rule Created Successfully', 'success');
+                        document.getElementById('new-rule-modal').classList.add('hidden');
+                        initSigmaEditor(); // Refresh tree
+                    } else {
+                        showToast('Failed to create rule', 'error');
+                    }
+                } catch (e) {
+                    console.error(e);
+                    showToast('Error creating rule', 'error');
+                }
+            }
+        </script>
+</body>
+
+</html>

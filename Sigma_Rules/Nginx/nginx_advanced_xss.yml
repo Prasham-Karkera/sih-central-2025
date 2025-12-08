@@ -1,0 +1,32 @@
+title: Nginx Reflected/Stored XSS Detection (Advanced)
+id: nginx_advanced_xss
+status: experimental
+description: Detects requests with encoded payloads or script tags in parameters in Nginx access logs
+author: Copilot
+logsource:
+  product: nginx
+  service: webserver
+  category: web
+  definition: accesslog
+  path: access.log
+  fields: [Request, SourceIp, UserAgent]
+detection:
+  selection:
+    Request|contains:
+      - '%3Cscript%3E'
+      - '<script>'
+      - '%3Cimg%20src'
+      - 'onerror='
+      - 'onload='
+      - 'javascript:'
+      - 'document.cookie'
+      - 'alert('
+      - 'prompt('
+      - 'eval('
+      - 'src=data:'
+  condition: selection
+fields:
+  - Request
+  - SourceIp
+  - UserAgent
+level: high

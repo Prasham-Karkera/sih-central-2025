@@ -1,0 +1,22 @@
+title: ARP Spoofing/Poisoning
+id: custom-arp-spoof
+status: experimental
+description: Detects duplicate or rapidly changing ARP entries (potential MITM)
+references:
+  - https://attack.mitre.org/techniques/T1557/
+author: Copilot
+logsource:
+  product: linux
+  service: network
+  category: arp
+fields:
+  - source_ip
+  - mac_address
+  - timestamp
+detection:
+  selection:
+    mac_address|duplicate: true
+  condition: selection
+falsepositives:
+  - Network reconfiguration
+level: high

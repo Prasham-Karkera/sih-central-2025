@@ -1,0 +1,29 @@
+title: Reverse Shells and Remote Access Tools
+id: win-proc-reverse-shell
+status: experimental
+description: Detects shell processes with network-related command lines or suspicious parents
+references:
+  - https://attack.mitre.org/techniques/T1059/001/
+author: Copilot
+logsource:
+  product: windows
+  service: process
+fields:
+  - name
+  - cmdline
+  - parent
+detection:
+  selection:
+    name|in:
+      - 'cmd.exe'
+      - 'powershell.exe'
+    cmdline|contains:
+      - 'nc '
+      - 'curl '
+      - 'wget '
+      - 'tcp'
+      - 'reverse'
+  condition: selection
+falsepositives:
+  - Penetration testing
+level: high

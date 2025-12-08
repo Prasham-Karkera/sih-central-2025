@@ -1,0 +1,26 @@
+title: Port Scanning or Lateral Movement
+id: custom-portscan-lateral
+status: experimental
+description: Detects multiple connections to many internal hosts or ports (recon/lateral movement)
+references:
+  - https://attack.mitre.org/techniques/T1021/
+author: Copilot
+logsource:
+  product: linux
+  service: network
+  category: connection
+fields:
+  - remote_address
+  - local_address
+  - process
+  - type
+detection:
+  selection:
+    process|contains:
+      - 'nmap'
+      - 'masscan'
+    type: TCP
+  condition: selection
+falsepositives:
+  - Network scanning by admin
+level: medium

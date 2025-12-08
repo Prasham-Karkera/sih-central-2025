@@ -1,0 +1,29 @@
+title: Parent Process Anomalies
+id: win-proc-parent-anomaly
+status: experimental
+description: Detects system processes started by unexpected parent processes
+references:
+  - https://attack.mitre.org/techniques/T1055/
+author: Copilot
+logsource:
+  product: windows
+  service: process
+fields:
+  - name
+  - parent
+  - pid
+  - ppid
+detection:
+  selection:
+    name|in:
+      - 'svchost.exe'
+      - 'lsass.exe'
+      - 'services.exe'
+    parent|not_in:
+      - 'wininit.exe'
+      - 'services.exe'
+      - 'smss.exe'
+  condition: selection
+falsepositives:
+  - System troubleshooting
+level: high

@@ -1,0 +1,32 @@
+title: Unusual Peer-to-Peer (P2P) Traffic
+id: win-p2p-traffic
+status: experimental
+description: Detects P2P protocols or known P2P ports
+references:
+  - https://attack.mitre.org/techniques/T1102/
+author: Copilot
+logsource:
+  product: windows
+  service: network
+  category: connection
+fields:
+  - process
+  - local_port
+  - remote_ip
+  - type
+  - timestamp
+detection:
+  selection:
+    local_port|in:
+      - 6881
+      - 51413
+      - 135
+      - 4444
+    process|contains:
+      - 'bittorrent.exe'
+      - 'utorrent.exe'
+      - 'transmission.exe'
+  condition: selection
+falsepositives:
+  - Legitimate P2P use
+level: medium

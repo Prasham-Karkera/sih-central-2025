@@ -1,0 +1,24 @@
+title: Unusual Binary Locations
+id: proc-unusual-binloc
+status: experimental
+description: Detects execution of binaries from /tmp, /dev/shm, or other non-standard directories
+references:
+  - https://attack.mitre.org/techniques/T1036/
+author: Copilot
+logsource:
+  product: linux
+  service: process
+fields:
+  - exe
+  - cmdline
+  - name
+detection:
+  selection:
+    exe|contains:
+      - '/tmp/'
+      - '/dev/shm/'
+      - '/var/tmp/'
+  condition: selection
+falsepositives:
+  - Temporary scripts
+level: high

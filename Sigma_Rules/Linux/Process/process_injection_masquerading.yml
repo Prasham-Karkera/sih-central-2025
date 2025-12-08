@@ -1,0 +1,29 @@
+title: Process Injection or Masquerading
+id: proc-inject-masq
+status: experimental
+description: Detects suspicious or mismatched parent-child process relationships or command lines
+references:
+  - https://attack.mitre.org/techniques/T1055/
+author: Copilot
+logsource:
+  product: linux
+  service: process
+fields:
+  - name
+  - parent
+  - exe
+  - cmdline
+detection:
+  selection:
+    parent|in:
+      - 'python'
+      - 'perl'
+      - 'bash'
+    name|not_in:
+      - 'python'
+      - 'perl'
+      - 'bash'
+  condition: selection
+falsepositives:
+  - Scripting environments
+level: high

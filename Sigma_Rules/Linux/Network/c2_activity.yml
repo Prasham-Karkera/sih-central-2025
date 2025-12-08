@@ -1,0 +1,23 @@
+title: Command and Control (C2) Activity
+id: custom-c2-activity
+status: experimental
+description: Detects persistent connections to known C2 infrastructure or suspicious remote addresses
+references:
+  - https://attack.mitre.org/techniques/T1071/
+author: Copilot
+logsource:
+  product: linux
+  service: network
+  category: connection
+fields:
+  - remote_address
+  - process
+  - type
+detection:
+  selection:
+    remote_address|ip_in:
+      - '<KNOWN_C2_IPS>'
+  condition: selection
+falsepositives:
+  - Security testing
+level: critical

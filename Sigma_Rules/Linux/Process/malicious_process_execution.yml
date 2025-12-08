@@ -1,0 +1,28 @@
+title: Execution of Known Malicious or Suspicious Processes
+id: proc-malicious-exec
+status: experimental
+description: Detects execution of known malware, hacking tools, or unauthorized binaries by process name or path
+references:
+  - https://attack.mitre.org/techniques/T1059/
+author: Copilot
+logsource:
+  product: linux
+  service: process
+fields:
+  - name
+  - exe
+  - cmdline
+detection:
+  selection:
+    name|contains:
+      - 'netcat'
+      - 'ncat'
+      - 'meterpreter'
+      - 'empire'
+      - 'mimikatz'
+      - 'hydra'
+      - 'john'
+  condition: selection
+falsepositives:
+  - Penetration testing
+level: high

@@ -1,0 +1,25 @@
+title: ICMP Tunneling or Scanning
+id: custom-icmp-tunnel
+status: experimental
+description: Detects high volume or unusual ICMP traffic (covert channels or recon)
+references:
+  - https://attack.mitre.org/techniques/T1043/
+author: Copilot
+logsource:
+  product: linux
+  service: network
+  category: icmp
+fields:
+  - process
+  - remote_address
+  - type
+  - count
+  - timestamp
+detection:
+  selection:
+    type: ICMP
+    count|gte: 100
+  condition: selection
+falsepositives:
+  - Network troubleshooting
+level: medium

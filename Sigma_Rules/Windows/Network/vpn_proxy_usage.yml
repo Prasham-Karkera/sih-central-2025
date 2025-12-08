@@ -1,0 +1,27 @@
+title: Unusual VPN or Proxy Usage
+id: win-vpn-proxy
+status: experimental
+description: Detects VPN/proxy process connections (potential exfiltration or bypass)
+references:
+  - https://attack.mitre.org/techniques/T1090/
+author: Copilot
+logsource:
+  product: windows
+  service: network
+  category: connection
+fields:
+  - process
+  - remote_ip
+  - type
+  - timestamp
+detection:
+  selection:
+    process|contains:
+      - 'openvpn.exe'
+      - 'wireguard.exe'
+      - 'tor.exe'
+      - 'proxychains.exe'
+  condition: selection
+falsepositives:
+  - Legitimate VPN use
+level: medium

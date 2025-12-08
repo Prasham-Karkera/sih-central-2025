@@ -1,0 +1,28 @@
+title: Privilege Escalation via Unusual Process
+id: win-proc-priv-esc
+status: experimental
+description: Detects processes running as SYSTEM or with unusual parent-child relationships
+references:
+  - https://attack.mitre.org/techniques/T1068/
+author: Copilot
+logsource:
+  product: windows
+  service: process
+fields:
+  - name
+  - user
+  - parent
+  - ppid
+detection:
+  selection:
+    user: 'SYSTEM'
+    parent|in:
+      - 'winword.exe'
+      - 'excel.exe'
+      - 'outlook.exe'
+      - 'chrome.exe'
+      - 'firefox.exe'
+  condition: selection
+falsepositives:
+  - Legitimate SYSTEM processes
+level: high

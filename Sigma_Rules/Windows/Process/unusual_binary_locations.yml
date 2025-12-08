@@ -1,0 +1,25 @@
+title: Unusual Binary Locations
+id: win-proc-unusual-binloc
+status: experimental
+description: Detects execution of binaries from temp folders, user profiles, or other non-standard directories
+references:
+  - https://attack.mitre.org/techniques/T1036/
+author: Copilot
+logsource:
+  product: windows
+  service: process
+fields:
+  - exe
+  - cmdline
+  - name
+detection:
+  selection:
+    exe|contains:
+      - '\\Temp\\'
+      - '\\AppData\\'
+      - '\\Users\\'
+      - '\\Downloads\\'
+  condition: selection
+falsepositives:
+  - Temporary scripts
+level: high

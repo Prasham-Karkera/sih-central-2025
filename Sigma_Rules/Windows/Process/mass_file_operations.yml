@@ -1,0 +1,25 @@
+title: Mass File Operations
+id: win-proc-mass-file-op
+status: experimental
+description: Detects processes with command lines indicating bulk file modification, renaming, or deletion
+references:
+  - https://attack.mitre.org/techniques/T1486/
+author: Copilot
+logsource:
+  product: windows
+  service: process
+fields:
+  - name
+  - cmdline
+detection:
+  selection:
+    cmdline|contains:
+      - 'del /s'
+      - 'ren /s'
+      - 'move /s'
+      - 'cipher /w'
+      - 'compact /c'
+  condition: selection
+falsepositives:
+  - Backup or cleanup jobs
+level: high

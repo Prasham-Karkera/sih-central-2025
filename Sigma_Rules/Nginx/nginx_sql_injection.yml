@@ -1,0 +1,33 @@
+title: Nginx SQL Injection Attempt
+id: nginx-sql-injection-001
+status: experimental
+description: Detects SQL injection attempts in Nginx access logs
+references:
+  - https://owasp.org/www-community/attacks/SQL_Injection
+author: Sachin1785
+logsource:
+  product: web
+  service: nginx
+  category: webserver
+detection:
+  selection:
+    Url|contains:
+      - "'%20OR%20'1'='1"
+      - "'%20OR%201=1--"
+      - "'%20UNION%20SELECT"
+      - "'%20AND%20'1'='1"
+      - "'%20OR%20'a'='a"
+      - "%27%20OR%20%271%27=%271"
+      - "%27%20UNION%20SELECT"
+      - "information_schema"
+      - "xp_cmdshell"
+      - "select%20*%20from"
+      - "insert%20into"
+      - "update%20set"
+      - "delete%20from"
+      - "drop%20table"
+      - "0x%27"
+  condition: selection
+falsepositives:
+  - Penetration testing
+level: high

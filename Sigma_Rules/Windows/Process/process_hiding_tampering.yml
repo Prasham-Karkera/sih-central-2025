@@ -1,0 +1,28 @@
+title: Process Hiding or Tampering
+id: win-proc-hide-tamper
+status: experimental
+description: Detects processes with names similar to system processes but running from unusual locations
+references:
+  - https://attack.mitre.org/techniques/T1036/
+author: Copilot
+logsource:
+  product: windows
+  service: process
+fields:
+  - name
+  - exe
+  - cmdline
+detection:
+  selection:
+    name|in:
+      - 'svchost.exe'
+      - 'lsass.exe'
+      - 'explorer.exe'
+    exe|not_in:
+      - 'C:\\Windows\\System32\\svchost.exe'
+      - 'C:\\Windows\\System32\\lsass.exe'
+      - 'C:\\Windows\\explorer.exe'
+  condition: selection
+falsepositives:
+  - Custom builds
+level: high

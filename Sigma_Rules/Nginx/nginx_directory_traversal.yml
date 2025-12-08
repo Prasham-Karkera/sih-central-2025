@@ -1,0 +1,27 @@
+title: Nginx Directory Traversal Attempt
+id: nginx-directory-traversal-001
+status: experimental
+description: Detects directory traversal attempts in Nginx access logs
+references:
+  - https://owasp.org/www-community/attacks/Path_Traversal
+author: Sachin1785
+logsource:
+  product: web
+  service: nginx
+  category: webserver
+detection:
+  selection:
+    Url|contains:
+      - '../'
+      - '..%2F'
+      - '..%252F'
+      - '..%c0%af'
+      - '..\\"'
+      - '../../'
+      - 'etc/passwd'
+      - 'boot.ini'
+      - 'win.ini'
+  condition: selection
+falsepositives:
+  - Penetration testing
+level: high

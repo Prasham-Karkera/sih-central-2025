@@ -1,0 +1,28 @@
+title: Execution of Known Malicious or Suspicious Processes
+id: win-proc-malicious-exec
+status: experimental
+description: Detects execution of malware, hacking tools, or unauthorized binaries by process name or path
+references:
+  - https://attack.mitre.org/techniques/T1059/
+author: Copilot
+logsource:
+  product: windows
+  service: process
+fields:
+  - name
+  - exe
+  - cmdline
+detection:
+  selection:
+    name|contains:
+      - 'mimikatz'
+      - 'procdump'
+      - 'meterpreter'
+      - 'empire'
+      - 'cobaltstrike'
+      - 'hydra'
+      - 'john'
+  condition: selection
+falsepositives:
+  - Penetration testing
+level: high

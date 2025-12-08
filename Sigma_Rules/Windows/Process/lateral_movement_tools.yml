@@ -1,0 +1,25 @@
+title: Lateral Movement Tools
+id: win-proc-lateral-move
+status: experimental
+description: Detects execution of tools like psexec, wmic, mstsc, or remote desktop clients
+references:
+  - https://attack.mitre.org/techniques/T1021/
+author: Copilot
+logsource:
+  product: windows
+  service: process
+fields:
+  - name
+  - cmdline
+  - user
+detection:
+  selection:
+    name|in:
+      - 'psexec.exe'
+      - 'wmic.exe'
+      - 'mstsc.exe'
+      - 'rdesktop.exe'
+  condition: selection
+falsepositives:
+  - Legitimate remote access
+level: medium

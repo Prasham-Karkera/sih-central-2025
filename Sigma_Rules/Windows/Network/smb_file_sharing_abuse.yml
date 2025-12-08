@@ -1,0 +1,26 @@
+title: SMB/Windows File Sharing Abuse
+id: win-smb-abuse
+status: experimental
+description: Detects unusual SMB connections from Windows hosts
+references:
+  - https://attack.mitre.org/techniques/T1021/002/
+author: Copilot
+logsource:
+  product: windows
+  service: network
+  category: smb
+fields:
+  - process
+  - remote_ip
+  - type
+  - timestamp
+detection:
+  selection:
+    process|contains:
+      - 'smbclient.exe'
+      - 'explorer.exe'
+      - 'powershell.exe'
+  condition: selection
+falsepositives:
+  - Legitimate file sharing
+level: medium

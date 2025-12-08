@@ -1,0 +1,25 @@
+title: Unusual Protocol Usage
+id: custom-unusual-protocol
+status: experimental
+description: Detects UDP connections on ports typically used for TCP, or vice versa
+references:
+  - https://attack.mitre.org/techniques/T1043/
+author: Copilot
+logsource:
+  product: linux
+  service: network
+  category: connection
+fields:
+  - local_port
+  - type
+detection:
+  selection:
+    local_port|in:
+      - 22
+      - 80
+      - 443
+    type: UDP
+  condition: selection
+falsepositives:
+  - Custom application protocols
+level: medium

@@ -1,0 +1,22 @@
+title: Log Tampering or Deletion
+id: custom-log-tampering
+status: experimental
+description: Detects attempts to delete or modify log files or stop logging services
+references:
+  - https://attack.mitre.org/techniques/T1070/
+author: Copilot
+logsource:
+  product: linux
+  service: syslog
+detection:
+  keywords:
+    - 'rm /var/log'
+    - 'logrotate'
+    - 'service syslog stop'
+    - 'systemctl stop rsyslog'
+    - 'auditd: Stopping service'
+  condition: keywords
+falsepositives:
+  - Log rotation
+  - Admin maintenance
+level: high

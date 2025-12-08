@@ -1,0 +1,30 @@
+title: Port Scanning or Lateral Movement
+id: win-portscan-lateral
+status: experimental
+description: Detects multiple connections to many internal hosts or ports (recon/lateral movement)
+references:
+  - https://attack.mitre.org/techniques/T1021/
+author: Copilot
+logsource:
+  product: windows
+  service: network
+  category: connection
+fields:
+  - remote_ip
+  - local_port
+  - process
+  - pid
+detection:
+  selection:
+    process|contains:
+      - 'nmap'
+      - 'masscan'
+    local_port|not_in:
+      - 3389
+      - 445
+      - 80
+      - 443
+  condition: selection
+falsepositives:
+  - Network scanning by admin
+level: medium

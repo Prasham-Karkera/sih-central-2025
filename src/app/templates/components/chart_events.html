@@ -1,0 +1,16 @@
+<!-- Events Graph -->
+<div id="widget-chart-events" draggable="true" class="panel p-6 rounded-lg draggable-widget">
+    <div class="widget-remove-btn" onclick="removeWidget('widget-chart-events')"><i class="fas fa-times"></i></div>
+    <div class="flex justify-between items-center mb-6">
+        <h3 class="font-display font-bold text-lg">Event Velocity</h3>
+        <div class="flex gap-2">
+            <button
+                class="text-xs font-mono px-2 py-1 rounded bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 transition">1H</button>
+            <button
+                class="text-xs font-mono px-2 py-1 rounded bg-black dark:bg-white text-white dark:text-black">24H</button>
+        </div>
+    </div>
+    <div class="h-64 w-full">
+        <canvas id="eventsChart"></canvas>
+    </div>
+</div>

@@ -1,0 +1,8 @@
+timestamp,hostname,app_name,pid,raw_message,src_ip,recv_time,ssh_action,ssh_user,ssh_ip
+Dec  4 17:06:42,Hp-lap704,systemd-resolved,157,Clock change detected. Flushing caches.,192.168.0.109,2024-12-04T17:00:00,,,
+Dec  4 17:10:17,Hp-lap704,dark-knight499,,its workinglogger TEST TEST TEST,192.168.0.109,2024-12-04T17:00:00,,,
+Dec  4 17:11:38,Hp-lap704,sudo,,dark-knight499 : TTY=pts/2 ; PWD=/mnt/c/Users/Harsh ; USER=root ; COMMAND=/usr/bin/apt install nginx -y,192.168.0.109,2024-12-04T17:00:00,,,
+Dec  4 17:11:38,Hp-lap704,sudo,,pam_unix(sudo:session): session opened for user root(uid=0) by (uid=1000),192.168.0.109,2024-12-04T17:00:00,,,
+Dec  6 04:17:07,Hp-lap704,CRON,947,pam_unix(cron:session): session opened for user root(uid=0) by (uid=0),192.168.0.109,2024-12-04T17:00:00,,,
+Dec  6 04:16:59,Hp-lap704,systemd-resolved,124,message repeated 25 times: [ Clock change detected. Flushing caches.],192.168.0.109,2024-12-04T17:00:00,,,
+Dec  6 04:17:07,Hp-lap704,CRON,948,(root) CMD (   cd / && run-parts --report /etc/cron.hourly),192.168.0.109,2024-12-04T17:00:00,,,

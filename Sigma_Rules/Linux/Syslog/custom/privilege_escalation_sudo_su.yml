@@ -1,0 +1,20 @@
+title: Privilege Escalation via sudo/su
+id: custom-priv-esc-sudo-su
+status: experimental
+description: Detects suspicious or failed sudo/su attempts indicating privilege escalation
+references:
+  - https://attack.mitre.org/techniques/T1068/
+author: Copilot
+logsource:
+  product: linux
+  service: syslog
+detection:
+  keywords:
+    - 'sudo: ' # sudo usage
+    - 'su: '   # su usage
+    - 'authentication failure; logname=' # failed sudo
+    - 'FAILED SU' # failed su
+  condition: keywords
+falsepositives:
+  - Legitimate admin activity
+level: high

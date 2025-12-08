@@ -1,0 +1,33 @@
+title: Nginx Authentication Bypass Detection
+id: nginx_auth_bypass
+status: experimental
+description: Detects requests exploiting weak authentication mechanisms in Nginx access logs
+author: Copilot
+logsource:
+  product: nginx
+  service: webserver
+  category: web
+  definition: accesslog
+  path: access.log
+  fields: [Request, SourceIp, UserAgent, Status]
+detection:
+  selection:
+    Request|contains:
+      - 'admin'
+      - 'login'
+      - 'auth'
+      - 'token='
+      - 'session='
+    Status:
+      - 200
+      - 302
+  filter:
+    Request|contains:
+      - 'logout'
+  condition: selection and not filter
+fields:
+  - Request
+  - SourceIp
+  - UserAgent
+  - Status
+level: high

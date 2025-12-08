@@ -1,0 +1,30 @@
+title: Reverse Shell Activity
+id: win-reverse-shells
+status: experimental
+description: Detects shell processes making outbound connections (reverse shells)
+references:
+  - https://attack.mitre.org/techniques/T1059/
+author: Copilot
+logsource:
+  product: windows
+  service: network
+  category: connection
+fields:
+  - process
+  - remote_ip
+  - local_port
+  - pid
+detection:
+  selection:
+    process|contains:
+      - 'cmd.exe'
+      - 'powershell.exe'
+      - 'wscript.exe'
+      - 'cscript.exe'
+    remote_ip|not_in:
+      - 127.0.0.1
+      - '::1'
+  condition: selection
+falsepositives:
+  - Remote admin scripts
+level: high

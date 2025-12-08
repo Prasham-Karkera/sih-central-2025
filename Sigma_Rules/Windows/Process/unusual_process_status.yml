@@ -1,0 +1,24 @@
+title: Unusual Process Status or Behavior
+id: win-proc-unusual-status
+status: experimental
+description: Detects processes rapidly spawning and terminating, or stuck in unresponsive states
+references:
+  - https://attack.mitre.org/techniques/T1499/
+author: Copilot
+logsource:
+  product: windows
+  service: process
+fields:
+  - name
+  - status
+  - pid
+detection:
+  selection:
+    status|in:
+      - 'zombie'
+      - 'stopped'
+      - 'unresponsive'
+  condition: selection
+falsepositives:
+  - System bugs
+level: medium

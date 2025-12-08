@@ -1,0 +1,21 @@
+title: Unauthorized Software Installation
+id: custom-unauth-software-install
+status: experimental
+description: Detects installation or execution of unapproved packages or binaries
+references:
+  - https://attack.mitre.org/techniques/T1204/
+author: Copilot
+logsource:
+  product: linux
+  service: syslog
+detection:
+  keywords:
+    - 'apt-get install'
+    - 'yum install'
+    - 'dpkg -i'
+    - 'rpm -i'
+    - 'installing package'
+  condition: keywords
+falsepositives:
+  - Legitimate software updates
+level: medium

@@ -1,0 +1,24 @@
+title: Outbound Connections to Blacklisted/Threat-Intel IPs
+id: win-blacklist-outbound
+status: experimental
+description: Detects connections to IPs/domains known for malware, phishing, or C2
+references:
+  - https://attack.mitre.org/techniques/T1568/
+author: Copilot
+logsource:
+  product: windows
+  service: network
+  category: connection
+fields:
+  - remote_ip
+  - process
+  - type
+  - timestamp
+detection:
+  selection:
+    remote_ip|ip_in:
+      - '<BLACKLISTED_IPS>'
+  condition: selection
+falsepositives:
+  - Security testing
+level: critical

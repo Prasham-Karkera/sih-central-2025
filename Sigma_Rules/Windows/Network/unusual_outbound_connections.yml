@@ -1,0 +1,24 @@
+title: Unusual Outbound Connections
+id: win-unusual-outbound
+status: experimental
+description: Detects outbound connections to rare or foreign IPs (potential data exfiltration or C2)
+references:
+  - https://attack.mitre.org/techniques/T1041/
+author: Copilot
+logsource:
+  product: windows
+  service: network
+  category: connection
+fields:
+  - remote_ip
+  - process
+  - local_port
+  - pid
+detection:
+  selection:
+    remote_ip|ip_in:
+      - '<RARE_OR_FOREIGN_IPS>'
+  condition: selection
+falsepositives:
+  - Legitimate remote admin
+level: high

@@ -1,0 +1,26 @@
+title: Lateral Movement Tools
+id: proc-lateral-move
+status: experimental
+description: Detects execution of tools like ssh, scp, rsh, or remote desktop clients
+references:
+  - https://attack.mitre.org/techniques/T1021/
+author: Copilot
+logsource:
+  product: linux
+  service: process
+fields:
+  - name
+  - cmdline
+  - user
+detection:
+  selection:
+    name|in:
+      - 'ssh'
+      - 'scp'
+      - 'rsh'
+      - 'vncserver'
+      - 'remmina'
+  condition: selection
+falsepositives:
+  - Legitimate remote access
+level: medium

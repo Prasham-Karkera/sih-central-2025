@@ -1,0 +1,29 @@
+title: Browser Process Anomalies
+id: win-proc-browser-anomaly
+status: experimental
+description: Detects browsers spawning command shells or scripting engines
+references:
+  - https://attack.mitre.org/techniques/T1204/
+author: Copilot
+logsource:
+  product: windows
+  service: process
+fields:
+  - name
+  - parent
+  - cmdline
+detection:
+  selection:
+    parent|in:
+      - 'chrome.exe'
+      - 'firefox.exe'
+      - 'msedge.exe'
+    name|in:
+      - 'cmd.exe'
+      - 'powershell.exe'
+      - 'wscript.exe'
+      - 'cscript.exe'
+  condition: selection
+falsepositives:
+  - Browser automation
+level: high

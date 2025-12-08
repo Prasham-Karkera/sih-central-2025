@@ -1,0 +1,32 @@
+title: Suspicious Parent-Child Relationships
+id: win-proc-susp-parent-child
+status: experimental
+description: Detects Office or browser processes spawning command shells or scripting engines
+references:
+  - https://attack.mitre.org/techniques/T1204/
+author: Copilot
+logsource:
+  product: windows
+  service: process
+fields:
+  - name
+  - parent
+  - cmdline
+detection:
+  selection:
+    parent|in:
+      - 'winword.exe'
+      - 'excel.exe'
+      - 'outlook.exe'
+      - 'chrome.exe'
+      - 'firefox.exe'
+      - 'msedge.exe'
+    name|in:
+      - 'cmd.exe'
+      - 'powershell.exe'
+      - 'wscript.exe'
+      - 'cscript.exe'
+  condition: selection
+falsepositives:
+  - Macro or browser automation
+level: high

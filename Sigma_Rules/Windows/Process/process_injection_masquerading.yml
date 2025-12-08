@@ -1,0 +1,29 @@
+title: Process Injection or Masquerading
+id: win-proc-inject-masq
+status: experimental
+description: Detects suspicious or mismatched parent-child process relationships or command lines
+references:
+  - https://attack.mitre.org/techniques/T1055/
+author: Copilot
+logsource:
+  product: windows
+  service: process
+fields:
+  - name
+  - parent
+  - exe
+  - cmdline
+detection:
+  selection:
+    parent|in:
+      - 'wscript.exe'
+      - 'cscript.exe'
+      - 'powershell.exe'
+    name|not_in:
+      - 'wscript.exe'
+      - 'cscript.exe'
+      - 'powershell.exe'
+  condition: selection
+falsepositives:
+  - Scripting environments
+level: high

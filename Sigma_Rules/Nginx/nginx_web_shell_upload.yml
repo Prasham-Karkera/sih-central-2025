@@ -1,0 +1,26 @@
+title: Nginx Web Shell Upload Attempt
+id: nginx-web-shell-upload-001
+status: experimental
+description: Detects attempts to upload or access web shells in Nginx access logs
+references:
+  - https://owasp.org/www-community/attacks/Web_Shells
+author: Sachin1785
+logsource:
+  product: web
+  service: nginx
+  category: webserver
+detection:
+  selection:
+    Url|contains:
+      - "/upload"
+      - "/uploads"
+      - "/shell"
+      - "/backdoor"
+      - "webshell"
+      - "c99"
+      - "r57"
+      - "b374k"
+  condition: selection
+falsepositives:
+  - Legitimate file uploads
+level: high

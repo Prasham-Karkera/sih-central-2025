@@ -1,0 +1,21 @@
+title: Reverse Shell Activity
+id: custom-reverse-shell
+status: experimental
+description: Detects outbound connections from shell processes or common reverse shell patterns
+references:
+  - https://attack.mitre.org/techniques/T1059/
+author: Copilot
+logsource:
+  product: linux
+  service: syslog
+detection:
+  keywords:
+    - 'bash -i >& /dev/tcp/'
+    - '0<&196;exec 196<>/dev/tcp/'
+    - 'nc -e /bin/sh'
+    - 'curl http'
+    - 'wget http'
+  condition: keywords
+falsepositives:
+  - Penetration testing
+level: high

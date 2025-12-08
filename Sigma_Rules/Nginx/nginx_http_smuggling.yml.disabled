@@ -1,0 +1,27 @@
+title: Nginx HTTP Smuggling Detection
+id: nginx_http_smuggling
+status: experimental
+description: Detects abnormal use of Transfer-Encoding or Content-Length headers in Nginx access logs
+author: Copilot
+logsource:
+  product: nginx
+  service: webserver
+  category: web
+  definition: accesslog
+  path: access.log
+  fields: [Request, SourceIp, UserAgent, Headers]
+detection:
+  selection:
+    Headers|contains:
+      - 'Transfer-Encoding: chunked'
+      - 'Content-Length:'
+    Request|contains:
+      - 'Transfer-Encoding: chunked'
+      - 'Content-Length:'
+  condition: selection
+fields:
+  - Request
+  - SourceIp
+  - UserAgent
+  - Headers
+level: high

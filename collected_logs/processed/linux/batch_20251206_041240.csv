@@ -1,0 +1,8 @@
+timestamp,hostname,app_name,pid,raw_message,src_ip,recv_time,ssh_action,ssh_user,ssh_ip
+Dec  4 17:06:42,Hp-lap704,systemd-resolved,157,Clock change detected. Flushing caches.,192.168.0.109,2024-12-04T17:00:00,,,
+Dec  4 17:10:17,Hp-lap704,dark-knight499,,its workinglogger TEST TEST TEST,192.168.0.109,2024-12-04T17:00:00,,,
+Dec  4 17:11:38,Hp-lap704,sudo,,dark-knight499 : TTY=pts/2 ; PWD=/mnt/c/Users/Harsh ; USER=root ; COMMAND=/usr/bin/apt install nginx -y,192.168.0.109,2024-12-04T17:00:00,,,
+Dec  4 17:11:38,Hp-lap704,sudo,,pam_unix(sudo:session): session opened for user root(uid=0) by (uid=1000),192.168.0.109,2024-12-04T17:00:00,,,
+Dec  4 17:12:29,Hp-lap704,kernel,,[ 3839.475300] WSL (220) ERROR: CheckConnection: getaddrinfo() failed: -5,192.168.0.109,2024-12-04T17:00:00,,,
+Dec  4 17:17:01,Hp-lap704,CRON,3487,pam_unix(cron:session): session opened for user root(uid=0) by (uid=0),192.168.0.109,2024-12-04T17:00:00,,,
+Dec  5 14:00:58,krish-ramani-VivoBook-ASUSLaptop-X515JAB-X515JA,rsyslogd,,"[origin software=""rsyslogd"" swVersion=""8.2504.0"" x-pid=""1435"" x-info=""https://www.rsyslog.com""] exiting on signal 15.",192.168.0.109,2024-12-04T17:00:00,,,

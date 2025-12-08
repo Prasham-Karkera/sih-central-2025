@@ -1,0 +1,28 @@
+title: Nginx API Abuse Detection
+id: nginx_api_abuse
+status: experimental
+description: Detects unusual or excessive API calls, especially to sensitive endpoints in Nginx access logs
+author: Copilot
+logsource:
+  product: nginx
+  service: webserver
+  category: web
+  definition: accesslog
+  path: access.log
+  fields: [Request, SourceIp, UserAgent]
+detection:
+  selection:
+    Request|contains:
+      - '/api/'
+      - '/v1/'
+      - '/v2/'
+      - '/admin/'
+  aggregation:
+    timeframe: 1m
+    SourceIp|count: '>50'
+  condition: selection and aggregation
+fields:
+  - Request
+  - SourceIp
+  - UserAgent
+level: medium

@@ -1,0 +1,43 @@
+<!-- Discovered Devices -->
+<div id="widget-table-devices" draggable="true"
+    class="panel p-0 rounded-lg overflow-hidden flex flex-col h-[400px] draggable-widget">
+    <div class="widget-remove-btn" onclick="removeWidget('widget-table-devices')"><i class="fas fa-times"></i></div>
+    <div class="p-4 border-b border-white/10 flex justify-between items-center">
+        <h3 class="font-display font-bold text-sm">Discovered Devices</h3>
+        <span class="text-xs font-mono opacity-50">12 Active</span>
+    </div>
+    <div class="overflow-y-auto flex-1 custom-scrollbar">
+        <table class="w-full text-left text-xs">
+            <thead class="table-header font-mono uppercase sticky top-0">
+                <tr>
+                    <th class="p-3">Device</th>
+                    <th class="p-3">IP</th>
+                    <th class="p-3 text-right">Status</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-white/5">
+                <tr class="table-row transition-colors">
+                    <td class="p-3 font-medium">Core Router</td>
+                    <td class="p-3 font-mono opacity-70">192.168.1.1</td>
+                    <td class="p-3 text-right"><span class="w-2 h-2 rounded-full bg-green-500 inline-block"></span></td>
+                </tr>
+                <tr class="table-row transition-colors">
+                    <td class="p-3 font-medium">Firewall</td>
+                    <td class="p-3 font-mono opacity-70">192.168.1.254</td>
+                    <td class="p-3 text-right"><span class="w-2 h-2 rounded-full bg-green-500 inline-block"></span></td>
+                </tr>
+                <tr class="table-row transition-colors">
+                    <td class="p-3 font-medium">Workstation-01</td>
+                    <td class="p-3 font-mono opacity-70">192.168.1.105</td>
+                    <td class="p-3 text-right"><span class="w-2 h-2 rounded-full bg-yellow-500 inline-block"></span>
+                    </td>
+                </tr>
+                <tr class="table-row transition-colors">
+                    <td class="p-3 font-medium">Unknown Device</td>
+                    <td class="p-3 font-mono opacity-70">192.168.1.200</td>
+                    <td class="p-3 text-right"><span class="w-2 h-2 rounded-full bg-red-500 inline-block"></span></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>

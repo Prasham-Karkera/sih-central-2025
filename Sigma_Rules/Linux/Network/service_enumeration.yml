@@ -1,0 +1,25 @@
+title: Network Service Enumeration
+id: custom-service-enum
+status: experimental
+description: Detects repeated connections to a range of service ports (service discovery)
+references:
+  - https://attack.mitre.org/techniques/T1046/
+author: Copilot
+logsource:
+  product: linux
+  service: network
+  category: connection
+fields:
+  - remote_address
+  - local_port
+  - process
+  - type
+  - count
+  - timestamp
+detection:
+  selection:
+    count|gte: 20
+  condition: selection
+falsepositives:
+  - Network scanning by admin
+level: medium

@@ -1,0 +1,28 @@
+title: Nginx User-Agent Spoofing
+id: nginx-user-agent-spoofing-001
+status: experimental
+description: Detects suspicious or known malicious user agents in Nginx access logs
+references:
+  - https://owasp.org/www-community/attacks/User_Agent_Spoofing
+author: Sachin1785
+logsource:
+  product: web
+  service: nginx
+  category: webserver
+detection:
+  selection:
+    UserAgent|contains:
+      - "sqlmap"
+      - "nikto"
+      - "acunetix"
+      - "nmap"
+      - "masscan"
+      - "dirb"
+      - "dirbuster"
+      - "gobuster"
+      - "wpscan"
+      - "nuclei"
+  condition: selection
+falsepositives:
+  - Automated monitoring
+level: medium

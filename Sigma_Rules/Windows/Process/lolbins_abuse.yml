@@ -1,0 +1,32 @@
+title: Living-off-the-Land Binary (LOLBins) Abuse
+id: win-proc-lolbins
+status: experimental
+description: Detects suspicious use of built-in Windows tools for non-standard purposes
+references:
+  - https://attack.mitre.org/techniques/T1218/
+author: Copilot
+logsource:
+  product: windows
+  service: process
+fields:
+  - name
+  - cmdline
+  - exe
+detection:
+  selection:
+    name|in:
+      - 'mshta.exe'
+      - 'regsvr32.exe'
+      - 'rundll32.exe'
+      - 'certutil.exe'
+      - 'bitsadmin.exe'
+    cmdline|contains:
+      - 'http'
+      - 'powershell'
+      - 'cmd.exe'
+      - '.js'
+      - '.vbs'
+  condition: selection
+falsepositives:
+  - Admin scripting
+level: high

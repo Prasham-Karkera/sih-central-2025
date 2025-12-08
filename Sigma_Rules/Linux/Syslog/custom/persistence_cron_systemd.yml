@@ -1,0 +1,21 @@
+title: Persistence via Cron or Systemd
+id: custom-persistence-cron-systemd
+status: experimental
+description: Detects creation or modification of cron jobs or systemd services
+references:
+  - https://attack.mitre.org/techniques/T1053/
+author: Copilot
+logsource:
+  product: linux
+  service: syslog
+detection:
+  keywords:
+    - 'CRON' # cron job execution
+    - 'systemd: Starting' # new service
+    - 'systemd: Created slice'
+    - 'systemd: Reloading'
+  condition: keywords
+falsepositives:
+  - System updates
+  - Admin tasks
+level: medium

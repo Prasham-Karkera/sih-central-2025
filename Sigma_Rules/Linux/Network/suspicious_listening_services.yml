@@ -1,0 +1,28 @@
+title: Suspicious Listening Services
+id: custom-suspicious-listen
+status: experimental
+description: Detects unexpected processes listening on non-standard ports
+references:
+  - https://attack.mitre.org/techniques/T1043/
+author: Copilot
+logsource:
+  product: linux
+  service: network
+  category: connection
+fields:
+  - local_port
+  - process
+  - type
+detection:
+  selection:
+    local_port|not_in:
+      - 22
+      - 80
+      - 443
+      - 3306
+      - 5432
+    type: TCP
+  condition: selection
+falsepositives:
+  - Custom application ports
+level: high

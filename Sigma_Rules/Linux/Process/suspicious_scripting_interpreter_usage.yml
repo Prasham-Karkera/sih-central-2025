@@ -1,0 +1,30 @@
+title: Suspicious Scripting or Interpreter Usage
+id: proc-susp-script
+status: experimental
+description: Detects execution of python, perl, ruby, or other interpreters with suspicious scripts or arguments
+references:
+  - https://attack.mitre.org/techniques/T1059/
+author: Copilot
+logsource:
+  product: linux
+  service: process
+fields:
+  - name
+  - cmdline
+  - exe
+detection:
+  selection:
+    name|in:
+      - 'python'
+      - 'perl'
+      - 'ruby'
+      - 'php'
+    cmdline|contains:
+      - 'eval('
+      - 'base64'
+      - 'exec('
+      - 'os.system'
+  condition: selection
+falsepositives:
+  - Automation scripts
+level: medium

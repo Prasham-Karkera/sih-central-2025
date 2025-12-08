@@ -1,0 +1,14 @@
+hostname,EventID,channel,TimeCreated,EventRecordID,Level,Computer,message,src_ip,recv_time,Subject_Security_ID,Subject_Account_Name,Subject_Account_Domain,LogonInformation_Logon_Type,LogonInformation_Restricted_Admin_Mode,LogonInformation_User,LogonInformation_Logon_Process,cmdline,name,parent,user,parent_name,process_name
+WIN-SERVER01,4624,Security,2024-12-04T10:30:45.123Z,12345,Information,WIN-SERVER01.domain.local,"An account was successfully logged on.
+
+Subject:
+	Security ID: S-1-5-18
+	Account Name: SYSTEM
+	Account Domain: NT AUTHORITY
+
+Logon Information:
+	Logon Type: 3
+	Restricted Admin Mode: -
+	User: john.doe
+	Logon Process: NtLmSsp",10.0.0.50,2024-12-04T10:00:00,S-1-5-18,SYSTEM,NT AUTHORITY,3,-,john.doe,NtLmSsp,,,,,,
+WIN-WORKSTATION02,4688,Security,2024-12-04T11:15:30.456Z,,,,,10.0.0.50,2024-12-04T10:00:00,,,,,,,,powershell.exe -NoProfile -ExecutionPolicy Bypass,C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe,C:\Windows\System32\cmd.exe,administrator,cmd.exe,powershell.exe

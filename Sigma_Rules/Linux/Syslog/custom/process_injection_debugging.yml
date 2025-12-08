@@ -1,0 +1,20 @@
+title: Process Injection or Debugging
+id: custom-process-injection-debug
+status: experimental
+description: Detects use of ptrace, gdb, or strace on critical processes
+references:
+  - https://attack.mitre.org/techniques/T1055/
+author: Copilot
+logsource:
+  product: linux
+  service: syslog
+detection:
+  keywords:
+    - 'ptrace('
+    - 'gdb '
+    - 'strace '
+    - 'debugger attached'
+  condition: keywords
+falsepositives:
+  - Debugging by developers
+level: high

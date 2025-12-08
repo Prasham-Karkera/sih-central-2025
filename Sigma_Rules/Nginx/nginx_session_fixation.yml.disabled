@@ -1,0 +1,27 @@
+title: Nginx Session Fixation Detection
+id: nginx_session_fixation
+status: experimental
+description: Detects manipulation of session IDs in requests in Nginx access logs
+author: Copilot
+logsource:
+  product: nginx
+  service: webserver
+  category: web
+  definition: accesslog
+  path: access.log
+  fields: [Request, SourceIp, UserAgent]
+detection:
+  selection:
+    Request|contains:
+      - 'sessionid='
+      - 'phpsessid='
+      - 'jsessionid='
+      - 'sid='
+      - 'sessid='
+      - 'token='
+  condition: selection
+fields:
+  - Request
+  - SourceIp
+  - UserAgent
+level: medium

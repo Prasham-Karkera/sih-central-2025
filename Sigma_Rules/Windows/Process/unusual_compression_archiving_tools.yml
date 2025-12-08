@@ -1,0 +1,29 @@
+title: Unusual Use of Compression or Archiving Tools
+id: win-proc-compress-archive
+status: experimental
+description: Detects use of tools like compact.exe, makecab.exe, or third-party archivers for bulk file operations
+references:
+  - https://attack.mitre.org/techniques/T1560/
+author: Copilot
+logsource:
+  product: windows
+  service: process
+fields:
+  - name
+  - cmdline
+detection:
+  selection:
+    name|in:
+      - 'compact.exe'
+      - 'makecab.exe'
+      - '7z.exe'
+      - 'winrar.exe'
+    cmdline|contains:
+      - '/c'
+      - 'add'
+      - 'a '
+      - 'x '
+  condition: selection
+falsepositives:
+  - Backup or archiving jobs
+level: medium

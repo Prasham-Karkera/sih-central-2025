@@ -1,0 +1,21 @@
+title: Suspicious User Creation or Privilege Change
+id: custom-user-creation-priv
+status: experimental
+description: Detects new user accounts or privilege escalation via group changes
+references:
+  - https://attack.mitre.org/techniques/T1136/
+author: Copilot
+logsource:
+  product: linux
+  service: syslog
+detection:
+  keywords:
+    - 'useradd '
+    - 'adduser '
+    - 'usermod -aG sudo'
+    - 'usermod -aG wheel'
+    - 'gpasswd -a'
+  condition: keywords
+falsepositives:
+  - Legitimate admin activity
+level: high

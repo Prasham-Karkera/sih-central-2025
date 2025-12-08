@@ -1,0 +1,20 @@
+title: Network Attacks and Port Scanning
+id: custom-network-attacks
+status: experimental
+description: Detects port scanning or unusual network activity
+references:
+  - https://attack.mitre.org/techniques/T1046/
+author: Copilot
+logsource:
+  product: linux
+  service: syslog
+detection:
+  keywords:
+    - 'nmap scan report'
+    - 'masscan'
+    - 'unusual port activity'
+    - 'listening on port'
+  condition: keywords
+falsepositives:
+  - Network troubleshooting
+level: medium

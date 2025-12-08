@@ -1,0 +1,25 @@
+title: ICMP Tunneling or Scanning
+id: win-icmp-tunnel
+status: experimental
+description: Detects high volume or unusual ICMP traffic (covert channels or recon)
+references:
+  - https://attack.mitre.org/techniques/T1043/
+author: Copilot
+logsource:
+  product: windows
+  service: network
+  category: icmp
+fields:
+  - process
+  - remote_ip
+  - type
+  - count
+  - timestamp
+detection:
+  selection:
+    type: ICMP
+    count|gte: 100
+  condition: selection
+falsepositives:
+  - Network troubleshooting
+level: medium

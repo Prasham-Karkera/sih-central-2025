@@ -1,0 +1,28 @@
+title: Process Hiding or Tampering
+id: proc-hide-tamper
+status: experimental
+description: Detects processes with names similar to system processes but running from unusual locations
+references:
+  - https://attack.mitre.org/techniques/T1036/
+author: Copilot
+logsource:
+  product: linux
+  service: process
+fields:
+  - name
+  - exe
+  - cmdline
+detection:
+  selection:
+    name|in:
+      - 'sshd'
+      - 'systemd'
+      - 'init'
+    exe|not_in:
+      - '/usr/sbin/sshd'
+      - '/lib/systemd/systemd'
+      - '/sbin/init'
+  condition: selection
+falsepositives:
+  - Custom builds
+level: high

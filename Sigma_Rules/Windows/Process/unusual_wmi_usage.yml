@@ -1,0 +1,28 @@
+title: Unusual WMI Usage
+id: win-proc-wmi-usage
+status: experimental
+description: Detects wmiprvse.exe or wmic.exe executing scripts or commands not typical for the environment
+references:
+  - https://attack.mitre.org/techniques/T1047/
+author: Copilot
+logsource:
+  product: windows
+  service: process
+fields:
+  - name
+  - cmdline
+detection:
+  selection:
+    name|in:
+      - 'wmic.exe'
+      - 'wmiprvse.exe'
+    cmdline|contains:
+      - 'process call create'
+      - 'powershell'
+      - 'cmd.exe'
+      - '.vbs'
+      - '.js'
+  condition: selection
+falsepositives:
+  - System management
+level: high

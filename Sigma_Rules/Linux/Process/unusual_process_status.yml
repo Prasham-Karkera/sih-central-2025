@@ -1,0 +1,23 @@
+title: Unusual Process Status
+id: proc-unusual-status
+status: experimental
+description: Detects processes stuck in zombie or uninterruptible states
+references:
+  - https://attack.mitre.org/techniques/T1499/
+author: Copilot
+logsource:
+  product: linux
+  service: process
+fields:
+  - name
+  - status
+  - pid
+detection:
+  selection:
+    status|in:
+      - 'zombie'
+      - 'D'
+  condition: selection
+falsepositives:
+  - System bugs
+level: medium

@@ -1,0 +1,25 @@
+title: Persistence Mechanisms
+id: win-proc-persistence
+status: experimental
+description: Detects processes related to scheduled tasks, services, registry autoruns, or startup folders
+references:
+  - https://attack.mitre.org/techniques/T1053/
+author: Copilot
+logsource:
+  product: windows
+  service: process
+fields:
+  - name
+  - cmdline
+  - exe
+detection:
+  selection:
+    cmdline|contains:
+      - 'schtasks'
+      - 'reg add HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run'
+      - 'startup'
+      - 'services.exe'
+  condition: selection
+falsepositives:
+  - System maintenance
+level: medium

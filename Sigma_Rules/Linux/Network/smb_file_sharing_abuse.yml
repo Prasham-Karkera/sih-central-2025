@@ -1,0 +1,25 @@
+title: SMB/Windows File Sharing Abuse
+id: custom-smb-abuse
+status: experimental
+description: Detects unusual SMB connections from Linux hosts
+references:
+  - https://attack.mitre.org/techniques/T1021/002/
+author: Copilot
+logsource:
+  product: linux
+  service: network
+  category: smb
+fields:
+  - process
+  - remote_address
+  - type
+  - timestamp
+detection:
+  selection:
+    process|contains:
+      - 'smbclient'
+      - 'mount.cifs'
+  condition: selection
+falsepositives:
+  - Legitimate file sharing
+level: medium

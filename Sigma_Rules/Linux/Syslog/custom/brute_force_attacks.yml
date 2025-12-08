@@ -1,0 +1,20 @@
+title: Brute Force Login Attempts
+id: custom-brute-force-logins
+status: experimental
+description: Detects repeated failed login attempts and account lockouts
+references:
+  - https://attack.mitre.org/techniques/T1110/
+author: Copilot
+logsource:
+  product: linux
+  service: syslog
+detection:
+  keywords:
+    - 'Failed password for'
+    - 'authentication failure'
+    - 'Account locked due to'
+    - 'FAILED LOGIN'
+  condition: keywords
+falsepositives:
+  - User mistyping password
+level: high

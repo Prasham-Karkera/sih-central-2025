@@ -1,0 +1,27 @@
+title: Unusual VPN or Proxy Usage
+id: custom-vpn-proxy
+status: experimental
+description: Detects VPN/proxy process connections (potential exfiltration or bypass)
+references:
+  - https://attack.mitre.org/techniques/T1090/
+author: Copilot
+logsource:
+  product: linux
+  service: network
+  category: connection
+fields:
+  - process
+  - remote_address
+  - type
+  - timestamp
+detection:
+  selection:
+    process|contains:
+      - 'openvpn'
+      - 'wireguard'
+      - 'tor'
+      - 'proxychains'
+  condition: selection
+falsepositives:
+  - Legitimate VPN use
+level: medium

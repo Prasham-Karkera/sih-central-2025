@@ -1,0 +1,29 @@
+title: Nginx SSRF Detection
+id: nginx_ssrf
+status: experimental
+description: Detects requests targeting internal IPs or cloud metadata endpoints in Nginx access logs
+author: Copilot
+logsource:
+  product: nginx
+  service: webserver
+  category: web
+  definition: accesslog
+  path: access.log
+  fields: [Request, SourceIp, UserAgent]
+detection:
+  selection:
+    Request|contains:
+      - '127.0.0.1'
+      - 'localhost'
+      - '169.254.169.254'
+      - 'metadata.google.internal'
+      - 'aws'
+      - 'gcp'
+      - 'azure'
+      - 'internal'
+  condition: selection
+fields:
+  - Request
+  - SourceIp
+  - UserAgent
+level: high

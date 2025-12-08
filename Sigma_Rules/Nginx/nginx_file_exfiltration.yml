@@ -1,0 +1,36 @@
+title: Nginx File Download/Exfiltration Detection
+id: nginx_file_exfiltration
+status: experimental
+description: Detects large or repeated downloads of sensitive files in Nginx access logs
+author: Copilot
+logsource:
+  product: nginx
+  service: webserver
+  category: web
+  definition: accesslog
+  path: access.log
+  fields: [Request, SourceIp, UserAgent, BytesSent]
+detection:
+  selection:
+    Request|contains:
+      - '.zip'
+      - '.tar'
+      - '.gz'
+      - '.bak'
+      - '.backup'
+      - '.sql'
+      - '.db'
+      - '.csv'
+      - '.xls'
+      - '.xlsx'
+    BytesSent|gte: 10485760  # 10MB
+  aggregation:
+    timeframe: 10m
+    SourceIp|count: '>5'
+  condition: selection and aggregation
+fields:
+  - Request
+  - SourceIp
+  - UserAgent
+  - BytesSent
+level: high

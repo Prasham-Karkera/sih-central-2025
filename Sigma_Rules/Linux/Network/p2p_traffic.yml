@@ -1,0 +1,32 @@
+title: Unusual Peer-to-Peer (P2P) Traffic
+id: custom-p2p-traffic
+status: experimental
+description: Detects P2P protocols or known P2P ports
+references:
+  - https://attack.mitre.org/techniques/T1102/
+author: Copilot
+logsource:
+  product: linux
+  service: network
+  category: connection
+fields:
+  - process
+  - local_port
+  - remote_address
+  - type
+  - timestamp
+detection:
+  selection:
+    local_port|in:
+      - 6881
+      - 51413
+      - 135
+      - 4444
+    process|contains:
+      - 'bittorrent'
+      - 'transmission'
+      - 'deluge'
+  condition: selection
+falsepositives:
+  - Legitimate P2P use
+level: medium
