@@ -52,6 +52,7 @@
     <script src="assets/js/vis-network.min.js"></script>
     <script src="assets/js/socket.io.min.js"></script>
     <script src="assets/js/analytics_component.js"></script>
+    <script src="assets/js/alert_details.js"></script>
 
     <style>
         /* Base Styles */
@@ -401,6 +402,11 @@
                     class="w-full text-left px-6 py-3 text-sm font-mono hover:bg-white/5 transition-colors flex items-center gap-3 border-l-2 border-transparent opacity-70 hover:opacity-100">
                     <i class="fas fa-cloud-upload-alt w-5 text-center"></i> <span data-i18n="nav_upload">Upload
                         Log</span>
+                </button>
+                <div class="h-px bg-white/10 mx-6 my-2"></div>
+                <button onclick="switchView('alerts')" id="nav-alerts"
+                    class="w-full text-left px-6 py-3 text-sm font-mono hover:bg-white/5 transition-colors flex items-center gap-3 border-l-2 border-transparent opacity-70 hover:opacity-100">
+                    <i class="fas fa-bell w-5 text-center"></i> <span data-i18n="nav_alerts">Alert Detail</span>
                 </button>
             </div>
         </aside>
@@ -853,6 +859,78 @@
                         onclick="triggerPluginUpload()">
                         <i class="fas fa-cloud-upload-alt text-4xl mb-2"></i>
                         <span class="font-mono text-sm">Upload .py or .html plugin</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- View: Alert Details -->
+            <div id="view-alerts" class="view-section hidden p-6">
+                <div class="panel p-6 rounded-lg h-[calc(100vh-8rem)] flex flex-col">
+                    <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+                        <div class="flex items-center gap-4">
+                            <h2 class="font-display font-bold text-2xl">Alert Details</h2>
+                            <!-- Severity Toggles -->
+                            <div class="flex bg-black/20 rounded-lg p-1 border border-white/10">
+                                <button data-filter="all"
+                                    class="alert-filter-btn px-3 py-1.5 rounded text-xs font-bold flex items-center gap-2 transition-all bg-white/10 text-white shadow">
+                                    <i class="fas fa-list"></i> All
+                                </button>
+                                <button data-filter="critical"
+                                    class="alert-filter-btn px-3 py-1.5 rounded text-xs font-bold flex items-center gap-2 transition-all opacity-60 hover:opacity-100">
+                                    <i class="fas fa-radiation text-red-500"></i> Critical
+                                </button>
+                                <button data-filter="warning"
+                                    class="alert-filter-btn px-3 py-1.5 rounded text-xs font-bold flex items-center gap-2 transition-all opacity-60 hover:opacity-100">
+                                    <i class="fas fa-exclamation-triangle text-orange-500"></i> Warning
+                                </button>
+                                <button data-filter="info"
+                                    class="alert-filter-btn px-3 py-1.5 rounded text-xs font-bold flex items-center gap-2 transition-all opacity-60 hover:opacity-100">
+                                    <i class="fas fa-info-circle text-blue-500"></i> Info
+                                </button>
+                            </div>
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="alertDetailsManager.fetchAlerts()"
+                                class="px-4 py-2 rounded bg-white/10 hover:bg-white/20 text-white text-sm font-bold"><i
+                                    class="fas fa-sync"></i> Refresh</button>
+                        </div>
+                    </div>
+
+                    <!-- Table Container -->
+                    <div
+                        class="flex-1 overflow-auto custom-scrollbar bg-black/20 rounded border border-white/5 relative">
+                        <table class="w-full text-left text-sm">
+                            <thead
+                                class="table-header font-mono uppercase sticky top-0 z-10 bg-gray-100 dark:bg-[#0a0a0a] border-b border-gray-200 dark:border-white/10 shadow-sm">
+                                <tr>
+                                    <th class="p-4 w-16">ID</th>
+                                    <th class="p-4 w-32">Title</th>
+                                    <th class="p-4">Description</th>
+                                    <th class="p-4 w-24">Severity</th>
+                                    <th class="p-4 w-24">Resolved</th>
+                                    <th class="p-4 w-32">False Positives</th>
+                                    <th class="p-4 w-32">Hostname</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-white/5 font-mono" id="alerts-table-body">
+                                <!-- Alerts injected here -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Pagination Controls -->
+                    <div class="mt-4 flex justify-between items-center border-t border-white/10 pt-4 mr-16">
+                        <span class="text-xs opacity-60 font-mono" id="alerts-pagination-info">Showing 0-0 of 0</span>
+                        <div class="flex gap-2">
+                            <button onclick="alertDetailsManager.changePage(-1)" id="btn-prev-alerts" disabled
+                                class="px-3 py-1.5 rounded bg-white/5 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed text-xs font-bold transition">
+                                <i class="fas fa-chevron-left mr-1"></i> Previous
+                            </button>
+                            <button onclick="alertDetailsManager.changePage(1)" id="btn-next-alerts" disabled
+                                class="px-3 py-1.5 rounded bg-white/5 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed text-xs font-bold transition">
+                                Next <i class="fas fa-chevron-right ml-1"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -2179,6 +2257,7 @@
                 initWebSocket();
                 loadSavedPlugins();
                 initVelocityChart();
+                if (window.alertDetailsManager) alertDetailsManager.init();
 
                 updateClock();
 
@@ -2417,6 +2496,10 @@
                     }
                 } else if (viewId === 'sigma') {
                     initSigmaEditor();
+                } else if (viewId === 'alerts') {
+                    if (window.alertDetailsManager) {
+                        alertDetailsManager.fetchAlerts();
+                    }
                 }
             }
 
