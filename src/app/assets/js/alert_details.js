@@ -179,41 +179,59 @@ class AlertDetailsManager {
             btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Encrypting...';
             btn.disabled = true;
 
-            const res = await fetch('/api/alerts/export/encrypted');
-            if (res.ok) {
-                const data = await res.json();
+            // 1. Fetch Data
+            const res = await fetch('/api/alerts/?limit=50&offset=0');
+            if (!res.ok) throw new Error('Failed to fetch alerts');
+            const data = await res.json();
+            const alerts = data.alerts || [];
 
-                // Decode Base64 to Binary
-                const binaryString = window.atob(data.encrypted_data);
-                const len = binaryString.length;
-                const bytes = new Uint8Array(len);
-                for (let i = 0; i < len; i++) {
-                    bytes[i] = binaryString.charCodeAt(i);
-                }
+            // 2. Encrypt Data
+            const key = await window.crypto.subtle.generateKey(
+                { name: "AES-GCM", length: 256 },
+                true,
+                ["encrypt", "decrypt"]
+            );
 
-                // Download Encrypted File
-                const blob = new Blob([bytes], { type: 'application/octet-stream' });
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `alerts_encrypted_${new Date().toISOString().slice(0, 10)}.bin`;
-                document.body.appendChild(a);
-                a.click();
-                window.URL.revokeObjectURL(url);
-                a.remove();
+            const iv = window.crypto.getRandomValues(new Uint8Array(12));
+            const enc = new TextEncoder();
+            const encodedData = enc.encode(JSON.stringify(alerts));
 
-                // Show Key in a prompt/alert so user can copy it
-                prompt("Encryption Key (Copy and save this securely!):", data.key);
+            const encrypted = await window.crypto.subtle.encrypt(
+                { name: "AES-GCM", iv: iv },
+                key,
+                encodedData
+            );
 
-            } else {
-                alert('Failed to export encrypted alerts');
-            }
+            // Combine IV + Encrypted Data
+            const buffer = new Uint8Array(iv.byteLength + encrypted.byteLength);
+            buffer.set(iv, 0);
+            buffer.set(new Uint8Array(encrypted), iv.byteLength);
+
+            // 3. Download .bin
+            const blob = new Blob([buffer], { type: 'application/octet-stream' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `alerts_encrypted_${new Date().toISOString().slice(0, 10)}.bin`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            a.remove();
+
+            // 4. Show Key
+            const exportedKey = await window.crypto.subtle.exportKey("raw", key);
+            const keyHex = [...new Uint8Array(exportedKey)]
+                .map(x => x.toString(16).padStart(2, '0'))
+                .join('');
+
+            prompt("Encryption Key (Copy and save this securely!):", keyHex);
 
             btn.innerHTML = originalText;
             btn.disabled = false;
+
         } catch (e) {
             console.error(e);
-            alert('Error exporting alerts');
+            alert('Error exporting alerts: ' + e.message);
             const btn = document.querySelector('button[onclick="alertDetailsManager.exportEncrypted()"]');
             if (btn) {
                 btn.innerHTML = '<i class="fas fa-lock"></i> Export Encrypted';

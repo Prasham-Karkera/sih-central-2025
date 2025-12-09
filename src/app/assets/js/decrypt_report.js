@@ -216,7 +216,7 @@ class DecryptReportManager {
                                             ${row.resolved ? 'Resolved' : 'Active'}
                                         </span>
                                     </td>
-                                    <td class="p-3 text-sm font-mono opacity-60">${row.hostname || '-'}</td>
+                                    <td class="p-3 text-sm font-mono opacity-60">${row.hostname || (row.server && row.server.hostname) || '-'}</td>
                                     <td class="p-3 text-sm font-mono opacity-60">${row.triggered_at || '-'}</td>
                                 </tr>
                             `}).join('')}
