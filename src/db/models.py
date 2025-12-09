@@ -33,12 +33,14 @@ class LogEntry(Base):
     linux_details = relationship("LinuxLogDetails", uselist=False)
     nginx_details = relationship("NginxLogDetails", uselist=False)
     windows_details = relationship("WindowsLogDetails", uselist=False)
+    zeek_conn_details = relationship("ZeekConnDetails", uselist=False)
 
 
 class LinuxLogDetails(Base):
     __tablename__ = "linux_log_details"
 
-    log_entry_id = Column(Integer, ForeignKey("log_entry.id"), primary_key=True)
+    log_entry_id = Column(Integer, ForeignKey(
+        "log_entry.id"), primary_key=True)
 
     timestamp = Column(DateTime)
     app_name = Column(String)
@@ -52,7 +54,8 @@ class LinuxLogDetails(Base):
 class NginxLogDetails(Base):
     __tablename__ = "nginx_log_details"
 
-    log_entry_id = Column(Integer, ForeignKey("log_entry.id"), primary_key=True)
+    log_entry_id = Column(Integer, ForeignKey(
+        "log_entry.id"), primary_key=True)
 
     remote_addr = Column(String)
     remote_user = Column(String)
@@ -69,8 +72,37 @@ class NginxLogDetails(Base):
 class WindowsLogDetails(Base):
     __tablename__ = "windows_log_details"
 
-    log_entry_id = Column(Integer, ForeignKey("log_entry.id"), primary_key=True)
+    log_entry_id = Column(Integer, ForeignKey(
+        "log_entry.id"), primary_key=True)
     content = Column(Text, nullable=False)   # JSON string
+
+
+class ZeekConnDetails(Base):
+    __tablename__ = "zeek_conn_details"
+
+    log_entry_id = Column(Integer, ForeignKey(
+        "log_entry.id"), primary_key=True)
+
+    ts = Column(DateTime)  # converted from epoch seconds
+    uid = Column(String)
+    orig_h = Column(String)
+    orig_p = Column(Integer)
+    resp_h = Column(String)
+    resp_p = Column(Integer)
+    proto = Column(String)
+    service = Column(String)
+    duration = Column(String)  # keep as string to preserve '-' or seconds
+    orig_bytes = Column(Integer)
+    resp_bytes = Column(Integer)
+    conn_state = Column(String)
+    local_orig = Column(String)
+    missed_bytes = Column(Integer)
+    history = Column(String)
+    orig_pkts = Column(Integer)
+    orig_ip_bytes = Column(Integer)
+    resp_pkts = Column(Integer)
+    resp_ip_bytes = Column(Integer)
+    tunnel_parents = Column(String)
 
 
 class AlertRule(Base):
