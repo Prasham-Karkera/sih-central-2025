@@ -1,139 +1,283 @@
 class DecryptReportManager {
     constructor() {
-        this.fileContent = null;
-        this.fileName = null;
+        this.file = null;
+        this.csvData = [];
+        this.currentPage = 0;
+        this.rowsPerPage = 20;
     }
 
     handleFileSelect(input) {
         const file = input.files[0];
         if (!file) return;
+        this.file = file;
 
-        this.fileName = file.name;
-        document.getElementById('decrypt-filename').innerText = file.name;
-        document.getElementById('decrypt-dropzone').classList.add('hidden');
-        document.getElementById('decrypt-status').classList.remove('hidden');
+        const statusDiv = document.getElementById('decrypt-status');
+        const filenameEl = document.getElementById('decrypt-filename');
+        const statusText = document.getElementById('decrypt-status-text');
+        const progress = document.getElementById('decrypt-progress');
+        const actions = document.getElementById('decrypt-actions');
 
-        // Simulate upload/read progress
-        const progressBar = document.getElementById('decrypt-progress');
-        progressBar.style.width = '0%';
+        statusDiv.classList.remove('hidden');
+        actions.classList.add('hidden');
+        filenameEl.innerText = file.name;
+        statusText.innerText = 'Ready to Decrypt';
+        statusText.className = 'text-xs font-bold text-blue-500';
+        progress.style.width = '0%';
 
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            this.fileContent = e.target.result; // This is the binary/text content
-            progressBar.style.width = '100%';
-            document.getElementById('decrypt-status-text').innerText = 'Ready to Decrypt';
-            document.getElementById('decrypt-status-text').classList.replace('text-yellow-500', 'text-green-500');
-            document.getElementById('decrypt-actions').classList.remove('hidden');
-        };
-        reader.readAsText(file);
+        actions.classList.remove('hidden');
     }
 
     async processDecryption() {
-        const key = document.getElementById('decrypt-key-input').value.trim();
-        if (!key) {
-            alert('Please enter the decryption key');
+        const keyInput = document.getElementById('decrypt-key-input');
+        const statusText = document.getElementById('decrypt-status-text');
+        const progress = document.getElementById('decrypt-progress');
+        const contentDiv = document.getElementById('decrypted-content');
+
+        const keyHex = keyInput.value.trim();
+
+        if (!this.file || !keyHex) {
+            showToast("Please provide file and key", "warning");
             return;
         }
 
-        const btn = document.querySelector('#decrypt-actions button');
-        const originalText = btn.innerHTML;
-        btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Decrypting...';
-        btn.disabled = true;
+        statusText.innerText = 'Decrypting...';
+        progress.style.width = '50%';
 
         try {
-            const res = await fetch('/api/alerts/decrypt', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    encrypted_data: this.fileContent,
-                    key: key
-                })
-            });
+            const arrayBuffer = await this.file.arrayBuffer();
 
-            if (res.ok) {
-                const data = await res.json();
-                if (data.success && data.alerts) {
-                    this.renderDecryptedTable(data.alerts);
-                    document.getElementById('decrypt-actions').classList.add('hidden');
-                    document.getElementById('decrypt-status').classList.add('hidden');
-                    document.getElementById('decrypted-content').classList.remove('hidden');
-                } else {
-                    alert('Decryption failed: Invalid data returned');
+            if (arrayBuffer.byteLength < 28) throw new Error("Invalid file format (too short)");
+
+            const iv = new Uint8Array(arrayBuffer.slice(0, 12));
+            const data = new Uint8Array(arrayBuffer.slice(12));
+
+            const keyBuffer = this.hex2buf(keyHex);
+
+            const key = await window.crypto.subtle.importKey(
+                "raw",
+                keyBuffer,
+                { name: "AES-GCM" },
+                true,
+                ["decrypt"]
+            );
+
+            const decrypted = await window.crypto.subtle.decrypt(
+                { name: "AES-GCM", iv: iv },
+                key,
+                data
+            );
+
+            const dec = new TextDecoder();
+            const decodedString = dec.decode(decrypted);
+
+            statusText.innerText = 'Rendering Report...';
+            progress.style.width = '80%';
+
+            // Try JSON first (legacy support)
+            try {
+                const jsonData = JSON.parse(decodedString);
+                if (jsonData.sections) {
+                    this.renderContent(jsonData, contentDiv);
+                    this.finishSuccess(statusText, progress);
+                    return;
                 }
-            } else {
-                const err = await res.json();
-                alert('Decryption failed: ' + (err.detail || 'Unknown error'));
+            } catch (e) {
+                // Not JSON, try CSV
             }
+
+            // Assume CSV
+            this.csvData = this.parseCSV(decodedString);
+            if (this.csvData.length > 0) {
+                this.currentPage = 0;
+                this.renderCSVTable(contentDiv);
+                this.finishSuccess(statusText, progress);
+            } else {
+                throw new Error("Empty or invalid CSV data");
+            }
+
         } catch (e) {
             console.error(e);
-            alert('Error processing decryption');
+            statusText.innerText = 'Decryption Failed';
+            statusText.className = 'text-xs font-bold text-red-500';
+            progress.style.width = '0%';
+            if (e.name === 'OperationError') {
+                showToast("Incorrect Key or Corrupted File", "error");
+            } else {
+                showToast("Decryption Failed: " + e.message, "error");
+            }
         }
-
-        btn.innerHTML = originalText;
-        btn.disabled = false;
     }
 
-    renderDecryptedTable(alerts) {
-        const container = document.getElementById('decrypted-content');
+    finishSuccess(statusText, progress) {
+        statusText.innerText = 'Complete';
+        statusText.className = 'text-xs font-bold text-green-500';
+        progress.style.width = '100%';
+        showToast("Report Decrypted Successfully", "success");
+    }
 
-        if (!alerts || alerts.length === 0) {
-            container.innerHTML = '<div class="text-center opacity-50 p-8">No alerts found in decrypted file.</div>';
-            return;
+    parseCSV(text) {
+        const lines = text.trim().split('\n');
+        if (lines.length < 2) return [];
+
+        const headers = this.parseCSVLine(lines[0]);
+        const rows = [];
+
+        for (let i = 1; i < lines.length; i++) {
+            const row = this.parseCSVLine(lines[i]);
+            if (row.length === headers.length) {
+                const obj = {};
+                headers.forEach((h, index) => obj[h] = row[index]);
+                rows.push(obj);
+            }
         }
+        return { headers, rows };
+    }
 
-        // Sort by severity
-        const severityOrder = { 'critical': 0, 'high': 0, 'warning': 1, 'medium': 1, 'info': 2, 'low': 2 };
-        alerts.sort((a, b) => {
-            const sevA = a.severity ? a.severity.toLowerCase() : 'low';
-            const sevB = b.severity ? b.severity.toLowerCase() : 'low';
-            return (severityOrder[sevA] ?? 2) - (severityOrder[sevB] ?? 2);
-        });
+    parseCSVLine(line) {
+        const result = [];
+        let current = '';
+        let inQuotes = false;
 
-        const html = `
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="font-bold text-lg text-green-500"><i class="fas fa-unlock mr-2"></i> Decrypted Alerts (${alerts.length})</h3>
-                <button onclick="location.reload()" class="text-xs bg-white/10 px-3 py-1 rounded hover:bg-white/20">Clear & Reset</button>
-            </div>
-            <div class="overflow-auto custom-scrollbar bg-black/20 rounded border border-white/5 max-h-[600px]">
-                <table class="w-full text-left text-sm">
-                    <thead class="table-header font-mono uppercase sticky top-0 z-10 bg-gray-100 dark:bg-[#0a0a0a] border-b border-gray-200 dark:border-white/10">
-                        <tr>
-                            <th class="p-4 w-16">ID</th>
-                            <th class="p-4">Title</th>
-                            <th class="p-4">Description</th>
-                            <th class="p-4 w-24">Severity</th>
-                            <th class="p-4 w-32">Time</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-white/5 font-mono">
-                        ${alerts.map(alert => {
-            let severity = alert.severity ? alert.severity.toLowerCase() : 'info';
-            let severityClass = 'text-blue-500';
-            if (severity === 'critical' || severity === 'high') severityClass = 'text-red-500';
-            else if (severity === 'warning' || severity === 'medium') severityClass = 'text-orange-500';
+        for (let i = 0; i < line.length; i++) {
+            const char = line[i];
+            if (char === '"') {
+                if (inQuotes && line[i + 1] === '"') {
+                    current += '"';
+                    i++;
+                } else {
+                    inQuotes = !inQuotes;
+                }
+            } else if (char === ',' && !inQuotes) {
+                result.push(current);
+                current = '';
+            } else {
+                current += char;
+            }
+        }
+        result.push(current);
+        return result;
+    }
 
-            return `
-                                <tr class="hover:bg-white/5 transition-colors">
-                                    <td class="p-4 opacity-60">#${alert.id}</td>
-                                    <td class="p-4 font-bold">${alert.title}</td>
-                                    <td class="p-4 opacity-80 text-xs">${alert.description}</td>
-                                    <td class="p-4 font-bold uppercase text-xs ${severityClass}">${severity}</td>
-                                    <td class="p-4 opacity-60 text-xs">${alert.triggered_at ? new Date(alert.triggered_at).toLocaleString() : '-'}</td>
+    renderCSVTable(container) {
+        container.innerHTML = '';
+        container.classList.remove('hidden');
+
+        const { headers, rows } = this.csvData;
+        const totalPages = Math.ceil(rows.length / this.rowsPerPage);
+
+        const start = this.currentPage * this.rowsPerPage;
+        const end = Math.min(start + this.rowsPerPage, rows.length);
+        const currentRows = rows.slice(start, end);
+
+        const tableHtml = `
+            <div class="panel p-6 rounded-lg border border-white/5">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="font-display font-bold text-lg">Decrypted Alerts Data</h3>
+                    <div class="text-xs font-mono opacity-60">
+                        Showing ${start + 1}-${end} of ${rows.length}
+                    </div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-white/5 border-b border-white/10">
+                            <tr>
+                                ${headers.map(h => `<th class="p-3 text-left opacity-60 font-mono text-xs uppercase whitespace-nowrap">${h.replace(/_/g, ' ')}</th>`).join('')}
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-white/5">
+                            ${currentRows.map(row => `
+                                <tr class="hover:bg-white/5 transition">
+                                    ${headers.map(h => `<td class="p-3 text-sm whitespace-nowrap">${row[h]}</td>`).join('')}
                                 </tr>
-                            `;
-        }).join('')}
-                    </tbody>
-                </table>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="flex justify-between items-center mt-4 border-t border-white/10 pt-4">
+                    <button onclick="decryptReportManager.changePage(-1)" ${this.currentPage === 0 ? 'disabled' : ''} class="px-3 py-1 rounded bg-white/5 hover:bg-white/10 disabled:opacity-30 text-xs font-bold">Previous</button>
+                    <span class="text-xs font-mono opacity-60">Page ${this.currentPage + 1} of ${totalPages}</span>
+                    <button onclick="decryptReportManager.changePage(1)" ${this.currentPage >= totalPages - 1 ? 'disabled' : ''} class="px-3 py-1 rounded bg-white/5 hover:bg-white/10 disabled:opacity-30 text-xs font-bold">Next</button>
+                </div>
             </div>
         `;
 
-        container.innerHTML = html;
+        container.innerHTML = tableHtml;
+    }
+
+    changePage(delta) {
+        const { rows } = this.csvData;
+        const totalPages = Math.ceil(rows.length / this.rowsPerPage);
+
+        this.currentPage += delta;
+        if (this.currentPage < 0) this.currentPage = 0;
+        if (this.currentPage >= totalPages) this.currentPage = totalPages - 1;
+
+        const container = document.getElementById('decrypted-content');
+        this.renderCSVTable(container);
+    }
+
+    // Legacy JSON Render Support
+    renderContent(jsonData, container) {
+        container.innerHTML = '';
+        container.classList.remove('hidden');
+
+        if (jsonData.sections && Array.isArray(jsonData.sections)) {
+            jsonData.sections.forEach(section => {
+                const sectionEl = document.createElement('div');
+                sectionEl.className = 'panel p-6 rounded-lg border border-white/5';
+
+                let contentHtml = '';
+
+                if (section.type === 'table') {
+                    const headers = section.content.headers.map(h => `<th class="p-3 text-left opacity-60 font-mono text-xs uppercase">${h}</th>`).join('');
+                    const rows = section.content.rows.map(row => {
+                        return `<tr class="border-b border-white/5 last:border-0 hover:bg-white/5 transition">
+                            ${row.map(cell => `<td class="p-3 text-sm">${cell}</td>`).join('')}
+                        </tr>`;
+                    }).join('');
+                    contentHtml = `
+                        <div class="overflow-x-auto">
+                            <table class="w-full">
+                                <thead class="bg-white/5 border-b border-white/10"><tr>${headers}</tr></thead>
+                                <tbody>${rows}</tbody>
+                            </table>
+                        </div>
+                    `;
+                } else if (section.type === 'image') {
+                    contentHtml = `<img src="${section.content}" class="w-full rounded border border-white/10 bg-black/20 p-2">`;
+                } else if (section.type === 'stat') {
+                    contentHtml = `
+                        <div class="flex flex-col items-center justify-center py-4">
+                            <span class="text-4xl font-bold font-display text-blue-500">${section.content.value}</span>
+                            <span class="text-sm opacity-60 mt-2 text-center">${section.content.subtext}</span>
+                        </div>
+                    `;
+                } else {
+                    contentHtml = `<p class="text-sm opacity-80 whitespace-pre-wrap">${section.content}</p>`;
+                }
+
+                sectionEl.innerHTML = `
+                    <h3 class="font-display font-bold text-lg mb-4 border-b border-white/10 pb-2">${section.title}</h3>
+                    ${contentHtml}
+                `;
+                container.appendChild(sectionEl);
+            });
+        }
+    }
+
+    hex2buf(hex) {
+        if (!hex) return new Uint8Array(0);
+        const bytes = new Uint8Array(hex.length / 2);
+        for (let i = 0; i < bytes.length; i++) {
+            bytes[i] = parseInt(hex.substr(i * 2, 2), 16);
+        }
+        return bytes;
     }
 }
 
 const decryptReportManager = new DecryptReportManager();
 
-// Global functions for HTML event handlers
+// Global hooks
 function handleDecryptFileSelect(input) {
     decryptReportManager.handleFileSelect(input);
 }

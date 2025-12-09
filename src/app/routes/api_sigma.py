@@ -45,7 +45,7 @@ async def list_rules(folder: str):
 async def get_rule_content(path: str):
     """Get content of a specific rule."""
     # Security check: prevent directory traversal
-    if ".." in path or path.startswith("/"):
+    if ".." in path or path.startswith("/") or path.startswith("\\"):
         raise HTTPException(status_code=400, detail="Invalid path")
         
     file_path = SIGMA_RULES_DIR / path
@@ -73,7 +73,7 @@ async def get_sigma_tree():
                     
                 node = {
                     "name": item.name,
-                    "path": str(item.relative_to(SIGMA_RULES_DIR)),
+                    "path": item.relative_to(SIGMA_RULES_DIR).as_posix(),
                     "type": "directory" if item.is_dir() else "file"
                 }
                 
@@ -98,7 +98,7 @@ async def save_rule_content(rule: RuleContent, x_user_role: str = Header(default
         raise HTTPException(status_code=403, detail="Node Admin cannot save rules")
 
     # Security check
-    if ".." in rule.path or rule.path.startswith("/"):
+    if ".." in rule.path or rule.path.startswith("/") or rule.path.startswith("\\"):
         raise HTTPException(status_code=400, detail="Invalid path")
     
     file_path = SIGMA_RULES_DIR / rule.path
