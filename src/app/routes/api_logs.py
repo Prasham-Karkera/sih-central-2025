@@ -182,3 +182,70 @@ async def search_logs(
         }
     finally:
         db.close()
+
+
+@router.get("/export/ocfs")
+async def export_ocfs_logs(source: Optional[str] = None) -> Dict[str, Any]:
+    """Export logs in OCFS format."""
+    db = SessionLocal()
+    try:
+        query = db.query(LogEntry, Server).join(Server, LogEntry.server_id == Server.id)
+        
+        if source:
+            query = query.filter(LogEntry.log_source == source)
+            
+        results = query.all()
+        
+        ocfs_logs = []
+        for log_entry, server in results:
+            # Basic OCFS mapping
+            ocfs_log = {
+                "activity_id": 1, # System Activity
+                "class_uid": 1001, # System Resource
+                "time": int(log_entry.recv_time.timestamp() * 1000) if log_entry.recv_time else None,
+                "message": log_entry.content,
+                "device": {
+                    "hostname": server.hostname,
+                    "ip": server.ip_address,
+                    "type_id": 1 # Server
+                },
+                "metadata": {
+                    "product": {
+                        "name": "Trishul",
+                        "vendor_name": "SIH2025"
+                    },
+                    "original_source": log_entry.log_source
+                },
+                "severity_id": 1 # Info (default)
+            }
+            
+            # Try to parse content if it's JSON (for Windows)
+            if log_entry.log_source == 'windows':
+                try:
+                    content_json = json.loads(log_entry.content)
+                    ocfs_log['message'] = content_json.get('message', log_entry.content)
+                    # Map levels if possible
+                    if 'level' in content_json:
+                        pass
+                except:
+                    pass
+            
+            # For Linux, try to get details
+            if log_entry.log_source == 'linux':
+                from src.db.models import LinuxLogDetails
+                details = db.query(LinuxLogDetails).filter_by(log_entry_id=log_entry.id).first()
+                if details:
+                    ocfs_log['process'] = {
+                        "name": details.app_name,
+                        "pid": details.pid
+                    }
+                    
+            ocfs_logs.append(ocfs_log)
+            
+        return {
+            "logs": ocfs_logs,
+            "count": len(ocfs_logs),
+            "source": source
+        }
+    finally:
+        db.close()
