@@ -6,7 +6,12 @@ from fastapi import APIRouter, HTTPException, Query
 from typing import Dict, Any, List, Optional
 from datetime import datetime
 import json
+import csv
+import io
 import sys
+import os
+import base64
+from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from cryptography.fernet import Fernet
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
@@ -175,14 +180,14 @@ async def get_alert_stats() -> Dict[str, Any]:
 
 @router.get("/export/encrypted")
 async def export_encrypted_alerts() -> Dict[str, Any]:
-    """Export all alerts encrypted."""
+    """Export all alerts encrypted as JSON."""
     db = SessionLocal()
     try:
-        # Fetch all alerts
-        alerts_query = db.query(Alert).all()
+        # Fetch all alerts with server info (LEFT JOIN to include alerts without server)
+        results = db.query(Alert, Server).outerjoin(Server, Alert.server_id == Server.id).all()
         
         alerts_data = []
-        for alert in alerts_query:
+        for alert, server in results:
             alerts_data.append({
                 "id": alert.id,
                 "title": alert.title,
@@ -190,21 +195,28 @@ async def export_encrypted_alerts() -> Dict[str, Any]:
                 "severity": alert.severity,
                 "resolved": alert.resolved,
                 "triggered_at": alert.triggered_at.isoformat() if alert.triggered_at else None,
+                "hostname": server.hostname if server else "Unknown",
                 "metadata": alert.alert_metadata
             })
             
-        json_data = json.dumps(alerts_data)
+        json_data = json.dumps(alerts_data).encode('utf-8')
         
-        # Generate Key
-        key = Fernet.generate_key()
-        f = Fernet(key)
+        # Generate Key (32 bytes for AES-256)
+        key = os.urandom(32)
         
-        # Encrypt
-        encrypted_data = f.encrypt(json_data.encode())
+        # Generate Nonce (12 bytes)
+        nonce = os.urandom(12)
+        
+        # Encrypt using AES-GCM
+        aesgcm = AESGCM(key)
+        ciphertext = aesgcm.encrypt(nonce, json_data, None)
+        
+        # Combine Nonce + Ciphertext
+        final_data = nonce + ciphertext
         
         return {
-            "key": key.decode(),
-            "encrypted_data": encrypted_data.decode()
+            "key": key.hex(),
+            "encrypted_data": base64.b64encode(final_data).decode('utf-8')
         }
     finally:
         db.close()
@@ -218,11 +230,27 @@ class DecryptRequest(BaseModel):
 
 @router.post("/decrypt")
 async def decrypt_alerts(request: DecryptRequest) -> Dict[str, Any]:
-    """Decrypt alerts data."""
+    """Decrypt alerts data from JSON format."""
     try:
-        f = Fernet(request.key.encode())
-        decrypted_data = f.decrypt(request.encrypted_data.encode())
-        alerts = json.loads(decrypted_data.decode())
+        # Decode Base64
+        data = base64.b64decode(request.encrypted_data)
+        
+        # Extract Nonce and Ciphertext
+        if len(data) < 12:
+            raise ValueError("Invalid data length")
+        nonce = data[:12]
+        ciphertext = data[12:]
+        
+        # Decode Key
+        key = bytes.fromhex(request.key)
+        
+        # Decrypt
+        aesgcm = AESGCM(key)
+        decrypted_data = aesgcm.decrypt(nonce, ciphertext, None)
+        
+        # Parse JSON
+        alerts = json.loads(decrypted_data.decode('utf-8'))
+            
         return {"success": True, "alerts": alerts}
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Decryption failed: {str(e)}")

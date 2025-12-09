@@ -2,6 +2,7 @@ class DecryptReportManager {
     constructor() {
         this.file = null;
         this.csvData = [];
+        this.jsonData = [];
         this.currentPage = 0;
         this.rowsPerPage = 20;
     }
@@ -73,27 +74,29 @@ class DecryptReportManager {
             statusText.innerText = 'Rendering Report...';
             progress.style.width = '80%';
 
-            // Try JSON first (legacy support)
             try {
                 const jsonData = JSON.parse(decodedString);
+
+                // Check for new Array format
+                if (Array.isArray(jsonData)) {
+                    this.jsonData = jsonData; // Store for pagination
+                    this.currentPage = 0;
+                    this.renderJSONTable(contentDiv);
+                    this.finishSuccess(statusText, progress);
+                    return;
+                }
+
+                // Legacy format
                 if (jsonData.sections) {
                     this.renderContent(jsonData, contentDiv);
                     this.finishSuccess(statusText, progress);
                     return;
                 }
             } catch (e) {
-                // Not JSON, try CSV
+                console.error("JSON Parse Error", e);
             }
 
-            // Assume CSV
-            this.csvData = this.parseCSV(decodedString);
-            if (this.csvData.length > 0) {
-                this.currentPage = 0;
-                this.renderCSVTable(contentDiv);
-                this.finishSuccess(statusText, progress);
-            } else {
-                throw new Error("Empty or invalid CSV data");
-            }
+            throw new Error("Invalid data format (expected JSON)");
 
         } catch (e) {
             console.error(e);
@@ -116,7 +119,7 @@ class DecryptReportManager {
     }
 
     parseCSV(text) {
-        const lines = text.trim().split('\n');
+        const lines = text.trim().split(/\r?\n/);
         if (lines.length < 2) return [];
 
         const headers = this.parseCSVLine(lines[0]);
@@ -158,16 +161,27 @@ class DecryptReportManager {
         return result;
     }
 
-    renderCSVTable(container) {
+    renderJSONTable(container) {
         container.innerHTML = '';
         container.classList.remove('hidden');
 
-        const { headers, rows } = this.csvData;
+        let rows = this.jsonData;
+
+        // If no data, use dummy data
+        if (!rows || rows.length === 0) {
+            rows = this.generateDummyData();
+            this.jsonData = rows; // Update reference for pagination
+            showToast("No data found. Showing dummy data for demonstration.", "info");
+        }
+
         const totalPages = Math.ceil(rows.length / this.rowsPerPage);
 
         const start = this.currentPage * this.rowsPerPage;
         const end = Math.min(start + this.rowsPerPage, rows.length);
         const currentRows = rows.slice(start, end);
+
+        // Define headers based on first object keys or fixed list
+        const headers = ['id', 'title', 'description', 'severity', 'resolved', 'hostname', 'triggered_at'];
 
         const tableHtml = `
             <div class="panel p-6 rounded-lg border border-white/5">
@@ -185,11 +199,27 @@ class DecryptReportManager {
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-white/5">
-                            ${currentRows.map(row => `
+                            ${currentRows.map(row => {
+            const safeDesc = (row.description || '').replace(/"/g, '&quot;');
+            return `
                                 <tr class="hover:bg-white/5 transition">
-                                    ${headers.map(h => `<td class="p-3 text-sm whitespace-nowrap">${row[h]}</td>`).join('')}
+                                    <td class="p-3 text-sm whitespace-nowrap opacity-60">#${row.id}</td>
+                                    <td class="p-3 text-sm font-bold">${row.title}</td>
+                                    <td class="p-3 text-sm opacity-80 max-w-[200px] truncate" title="${safeDesc}">${row.description}</td>
+                                    <td class="p-3 text-sm">
+                                        <span class="${row.severity === 'high' || row.severity === 'critical' ? 'text-red-500' : row.severity === 'medium' || row.severity === 'warning' ? 'text-orange-500' : 'text-blue-500'} font-bold uppercase text-xs">
+                                            ${row.severity}
+                                        </span>
+                                    </td>
+                                    <td class="p-3 text-sm">
+                                        <span class="${row.resolved ? 'text-green-500' : 'text-red-500'} font-bold uppercase text-xs">
+                                            ${row.resolved ? 'Resolved' : 'Active'}
+                                        </span>
+                                    </td>
+                                    <td class="p-3 text-sm font-mono opacity-60">${row.hostname || '-'}</td>
+                                    <td class="p-3 text-sm font-mono opacity-60">${row.triggered_at || '-'}</td>
                                 </tr>
-                            `).join('')}
+                            `}).join('')}
                         </tbody>
                     </table>
                 </div>
@@ -204,8 +234,58 @@ class DecryptReportManager {
         container.innerHTML = tableHtml;
     }
 
+    generateDummyData() {
+        return [
+            {
+                id: 1001,
+                title: "Brute Force Attack Detected",
+                description: "Multiple failed login attempts from IP 192.168.1.50",
+                severity: "critical",
+                resolved: false,
+                hostname: "auth-server-01",
+                triggered_at: new Date().toISOString()
+            },
+            {
+                id: 1002,
+                title: "High CPU Usage",
+                description: "CPU usage exceeded 90% for 5 minutes",
+                severity: "warning",
+                resolved: true,
+                hostname: "db-node-02",
+                triggered_at: new Date(Date.now() - 3600000).toISOString()
+            },
+            {
+                id: 1003,
+                title: "Port Scan Detected",
+                description: "Port scan activity detected from external IP",
+                severity: "high",
+                resolved: false,
+                hostname: "firewall-01",
+                triggered_at: new Date(Date.now() - 7200000).toISOString()
+            },
+            {
+                id: 1004,
+                title: "Service Stopped",
+                description: "Nginx service stopped unexpectedly",
+                severity: "medium",
+                resolved: true,
+                hostname: "web-proxy-01",
+                triggered_at: new Date(Date.now() - 10800000).toISOString()
+            },
+            {
+                id: 1005,
+                title: "Disk Space Low",
+                description: "Free disk space below 10% on /var/log",
+                severity: "low",
+                resolved: false,
+                hostname: "log-server-01",
+                triggered_at: new Date(Date.now() - 14400000).toISOString()
+            }
+        ];
+    }
+
     changePage(delta) {
-        const { rows } = this.csvData;
+        const rows = this.jsonData;
         const totalPages = Math.ceil(rows.length / this.rowsPerPage);
 
         this.currentPage += delta;
@@ -213,7 +293,7 @@ class DecryptReportManager {
         if (this.currentPage >= totalPages) this.currentPage = totalPages - 1;
 
         const container = document.getElementById('decrypted-content');
-        this.renderCSVTable(container);
+        this.renderJSONTable(container);
     }
 
     // Legacy JSON Render Support
