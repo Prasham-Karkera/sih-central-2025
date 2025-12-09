@@ -3,6 +3,11 @@ FastAPI Server for SIEM Dashboard
 
 Main server handling all API endpoints and WebSocket connections.
 """
+from src.app.plugins.usb_monitor import USBDeviceMonitorPlugin
+from src.app.routes import api_dashboard, api_alerts, api_logs, api_servers, api_sigma, api_tasks
+from fastapi.templating import Jinja2Templates
+from src.db.models import Server, LogEntry, Alert, ZeekConnDetails
+from src.db.setup import SessionLocal
 import asyncio
 import sys
 from pathlib import Path
@@ -18,14 +23,9 @@ from pydantic import BaseModel
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from src.db.setup import SessionLocal
-from src.db.models import Server, LogEntry, Alert
-from fastapi.templating import Jinja2Templates
 
 # Import API routes
 # Import API routes
-from src.app.routes import api_dashboard, api_alerts, api_logs, api_servers, api_sigma, api_tasks
-from src.app.plugins.usb_monitor import USBDeviceMonitorPlugin
 
 # === Configuration ===
 DB_PATH = "./ironchad_logs.db"
@@ -35,6 +35,8 @@ TEMPLATES_DIR = Path(__file__).parent / "templates"
 SIGMA_RULES_DIR = "./Sigma_Rules"
 
 # === Pydantic Models ===
+
+
 class StatsResponse(BaseModel):
     total_logs: int
     total_servers: int
@@ -42,9 +44,11 @@ class StatsResponse(BaseModel):
     by_type: Dict[str, int]
     uptime: float
 
+
 class AlertsResponse(BaseModel):
     alerts: List[Dict[str, Any]]
     count: int
+
 
 class ServerDetailResponse(BaseModel):
     server: Dict[str, Any]
@@ -53,31 +57,36 @@ class ServerDetailResponse(BaseModel):
     stats: Dict[str, Any]
 
 # === WebSocket Manager ===
+
+
 class ConnectionManager:
     def __init__(self):
         self.active_connections: set = set()
-    
+
     async def connect(self, websocket: WebSocket):
         await websocket.accept()
         self.active_connections.add(websocket)
-        print(f"[WebSocket] Client connected. Total: {len(self.active_connections)}")
-    
+        print(
+            f"[WebSocket] Client connected. Total: {len(self.active_connections)}")
+
     def disconnect(self, websocket: WebSocket):
         self.active_connections.discard(websocket)
-        print(f"[WebSocket] Client disconnected. Total: {len(self.active_connections)}")
-    
+        print(
+            f"[WebSocket] Client disconnected. Total: {len(self.active_connections)}")
+
     async def broadcast(self, message: Dict[str, Any]):
         if not self.active_connections:
             return
-        
+
         disconnected = set()
         for connection in self.active_connections:
             try:
                 await connection.send_json(message)
             except Exception:
                 disconnected.add(connection)
-        
+
         self.active_connections -= disconnected
+
 
 # === FastAPI App ===
 app = FastAPI(title="Ironclad SIEM Dashboard", version="2.0.0")
@@ -97,32 +106,35 @@ templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
 usb_plugin = USBDeviceMonitorPlugin()
 
 # === Startup/Shutdown ===
+
+
 @app.on_event("startup")
 async def startup_event():
     global start_time
-    
+
     start_time = datetime.now()
     print(f"[Server] Starting Ironclad SIEM Dashboard")
-    
+
     # Create directories
     STATIC_DIR.mkdir(exist_ok=True, parents=True)
     TEMPLATES_DIR.mkdir(exist_ok=True, parents=True)
-    
+
     # Start all background tasks
     await api_tasks.start_all_workers()
-    
+
     # Start USB Monitor Plugin
     loop = asyncio.get_running_loop()
     usb_plugin.on_load(ws_manager, loop)
-    
+
     print("[Server] All systems ready. Access dashboard at http://localhost:8000")
+
 
 @app.on_event("shutdown")
 async def shutdown_event():
     # Stop all background tasks gracefully
     await api_tasks.stop_all_workers()
     usb_plugin.on_unload()
-    
+
     print("[Server] Shutdown complete")
 
 # === Include API Routers ===
@@ -143,15 +155,16 @@ if ASSETS_DIR.exists():
 # === Template Routes ===
 root_templates = Jinja2Templates(directory=str(Path(__file__).parent))
 
+
 @app.get("/", response_class=HTMLResponse)
 async def dashboard(request: Request):
     """Serve main dashboard."""
     import platform
     os_name = platform.system()
-    
+
     icon = "fa-question-circle"
     display_name = f"HOST: {os_name.upper()}"
-    
+
     if os_name == "Linux":
         icon = "fab fa-linux"
     elif os_name == "Windows":
@@ -159,17 +172,19 @@ async def dashboard(request: Request):
     elif os_name == "Darwin":
         icon = "fab fa-apple"
         display_name = "HOST: MACOS"
-    
+
     return root_templates.TemplateResponse("index.html", {
         "request": request,
         "os_name": display_name,
         "os_icon": icon
     })
 
+
 @app.get("/servers", response_class=HTMLResponse)
 async def servers_page(request: Request):
     """Serve servers page."""
     return templates.TemplateResponse("index.html", {"request": request})
+
 
 @app.get("/alerts", response_class=HTMLResponse)
 async def alerts_page(request: Request):
@@ -177,11 +192,13 @@ async def alerts_page(request: Request):
     # For now, redirect to dashboard until alerts.html is created
     return templates.TemplateResponse("index.html", {"request": request})
 
+
 @app.get("/logs", response_class=HTMLResponse)
 async def logs_page(request: Request):
     """Serve logs page."""
     # For now, redirect to dashboard until logs.html is created
     return templates.TemplateResponse("index.html", {"request": request})
+
 
 @app.get("/api/health")
 async def health():
@@ -194,23 +211,24 @@ async def health():
         "parser_task": "running" if api_tasks.task_state.parser_running else "stopped"
     }
 
+
 @app.get("/api/stats", response_model=StatsResponse)
 async def get_stats():
     """Get system statistics."""
     db = SessionLocal()
     try:
         from sqlalchemy import func
-        
+
         total_logs = db.query(func.count(LogEntry.id)).scalar() or 0
         total_servers = db.query(func.count(Server.id)).scalar() or 0
         total_alerts = db.query(func.count(Alert.id)).scalar() or 0
-        
+
         by_type = {}
         for log_source, count in db.query(LogEntry.log_source, func.count(LogEntry.id)).group_by(LogEntry.log_source).all():
             by_type[log_source] = count
-        
+
         uptime = (datetime.now() - start_time).total_seconds()
-        
+
         return StatsResponse(
             total_logs=total_logs,
             total_servers=total_servers,
@@ -221,13 +239,14 @@ async def get_stats():
     finally:
         db.close()
 
+
 @app.get("/api/servers")
 async def get_servers(
     limit: int = Query(200, ge=1),
     offset: int = Query(0, ge=0)
 ):
     """Get all servers with specific dummy data."""
-    
+
     # Data provided by user
     servers_data = [
         {
@@ -452,10 +471,10 @@ async def get_servers(
             }
         }
     ]
-    
+
     # Apply limit and offset
-    paginated_servers = servers_data[offset : offset + limit]
-    
+    paginated_servers = servers_data[offset: offset + limit]
+
     return {
         "servers": paginated_servers,
         "total": len(servers_data),
@@ -464,14 +483,15 @@ async def get_servers(
         "offset": offset
     }
 
+
 @app.get("/api/servers/{server_id}", response_model=ServerDetailResponse)
 async def get_server_detail(server_id: int):
     """Get detailed information for a specific server with dummy data."""
-    
+
     # Generate detailed dummy data based on server_id
     server_types = ["nginx", "windows", "linux"]
     server_type = server_types[server_id % 3]
-    
+
     dummy_detail = {
         "id": server_id,
         "hostname": f"server-{server_id:02d}",
@@ -518,8 +538,9 @@ async def get_server_detail(server_id: int):
             for i in range(1, min(server_id * 2 + 1, 6))
         ]
     }
-    
+
     return ServerDetailResponse(**dummy_detail)
+
 
 @app.get("/api/logs")
 async def get_logs(
@@ -532,21 +553,23 @@ async def get_logs(
     db = SessionLocal()
     try:
         query = db.query(LogEntry)
-        
+
         if log_type:
             query = query.filter(LogEntry.log_source == log_type)
         if server_id:
             query = query.filter(LogEntry.server_id == server_id)
-        
-        logs = query.order_by(LogEntry.recv_time.desc()).offset(offset).limit(limit).all()
-        
+
+        logs = query.order_by(LogEntry.recv_time.desc()).offset(
+            offset).limit(limit).all()
+
         return {
-            "logs": [{"id": log.id, "server_id": log.server_id, "log_source": log.log_source, 
+            "logs": [{"id": log.id, "server_id": log.server_id, "log_source": log.log_source,
                       "recv_time": log.recv_time.isoformat(), "raw_log": log.content[:200]} for log in logs],
             "count": len(logs)
         }
     finally:
         db.close()
+
 
 @app.get("/api/alerts", response_model=AlertsResponse)
 async def get_alerts(
@@ -558,15 +581,17 @@ async def get_alerts(
     db = SessionLocal()
     try:
         query = db.query(Alert).filter(Alert.resolved == False)
-        
+
         if severity:
             query = query.filter(Alert.severity == severity)
-        
-        alerts = query.order_by(Alert.triggered_at.desc()).offset(offset).limit(limit).all()
-        
+
+        alerts = query.order_by(Alert.triggered_at.desc()).offset(
+            offset).limit(limit).all()
+
         return AlertsResponse(alerts=alerts, count=len(alerts))
     finally:
         db.close()
+
 
 @app.get("/api/alerts/stats")
 async def get_alert_stats():
@@ -574,22 +599,76 @@ async def get_alert_stats():
     db = SessionLocal()
     try:
         from sqlalchemy import func
-        
+
         total = db.query(func.count(Alert.id)).scalar() or 0
-        active = db.query(func.count(Alert.id)).filter(Alert.resolved == False).scalar() or 0
+        active = db.query(func.count(Alert.id)).filter(
+            Alert.resolved == False).scalar() or 0
         by_severity = {}
         for severity, count in db.query(Alert.severity, func.count(Alert.id)).group_by(Alert.severity).all():
             by_severity[severity] = count
-        
+
         return {"total_alerts": total, "active_alerts": active, "by_severity": by_severity}
     finally:
         db.close()
+
 
 @app.get("/api/timeseries")
 async def get_timeseries(hours: int = Query(24, ge=1, le=168)):
     """Get time-series data for charts."""
     # TODO: Implement timeseries data aggregation
     return {"timeseries": []}
+
+
+@app.get("/network")
+async def get_network_connections(
+    limit: int = Query(500, ge=1, le=5000),
+    offset: int = Query(0, ge=0)
+):
+    """Return Zeek conn.log records with all fields from the database."""
+    db = SessionLocal()
+    try:
+        # Join ZeekConnDetails with LogEntry to include metadata if needed
+        from sqlalchemy import desc
+        q = (
+            db.query(ZeekConnDetails, LogEntry)
+            .join(LogEntry, ZeekConnDetails.log_entry_id == LogEntry.id)
+            .order_by(desc(LogEntry.recv_time))
+            .offset(offset)
+            .limit(limit)
+        )
+        rows = q.all()
+        result = []
+        for details, log in rows:
+            result.append({
+                "id": details.log_entry_id,
+                "recv_time": log.recv_time.isoformat() if log.recv_time else None,
+                "log_source": log.log_source,
+                "content": log.content,
+                "ts": details.ts.isoformat() if details.ts else None,
+                "uid": details.uid,
+                "orig_h": details.orig_h,
+                "orig_p": details.orig_p,
+                "resp_h": details.resp_h,
+                "resp_p": details.resp_p,
+                "proto": details.proto,
+                "service": details.service,
+                "duration": details.duration,
+                "orig_bytes": details.orig_bytes,
+                "resp_bytes": details.resp_bytes,
+                "conn_state": details.conn_state,
+                "local_orig": details.local_orig,
+                "missed_bytes": details.missed_bytes,
+                "history": details.history,
+                "orig_pkts": details.orig_pkts,
+                "orig_ip_bytes": details.orig_ip_bytes,
+                "resp_pkts": details.resp_pkts,
+                "resp_ip_bytes": details.resp_ip_bytes,
+                "tunnel_parents": details.tunnel_parents,
+            })
+        return {"connections": result, "count": len(result)}
+    finally:
+        db.close()
+
 
 @app.get("/api/worker/status")
 async def get_worker_status():
@@ -610,11 +689,13 @@ async def get_worker_status():
     }
 
 # === WebSocket ===
+
+
 @app.websocket("/ws/live")
 async def websocket_live(websocket: WebSocket):
     """WebSocket for real-time updates."""
     await ws_manager.connect(websocket)
-    
+
     try:
         # Send initial data
         db = SessionLocal()
@@ -624,24 +705,24 @@ async def websocket_live(websocket: WebSocket):
             await websocket.send_json({"type": "stats", "data": {"total_logs": total_logs}})
         finally:
             db.close()
-            
+
         # Send initial USB devices
         current_usb = usb_plugin.get_current_devices()
         await websocket.send_json({
-            "type": "usb_update", 
+            "type": "usb_update",
             "data": {
                 "devices": current_usb,
                 "added": [],
                 "removed": []
             }
         })
-        
+
         # Keep connection alive
         while True:
             data = await websocket.receive_text()
             if data == "ping":
                 await websocket.send_text("pong")
-    
+
     except WebSocketDisconnect:
         ws_manager.disconnect(websocket)
     except Exception as e:
@@ -650,7 +731,7 @@ async def websocket_live(websocket: WebSocket):
 
 if __name__ == "__main__":
     import uvicorn
-    
+
     print("=" * 80)
     print("🛡️  IRONCLAD SIEM DASHBOARD")
     print("=" * 80)
@@ -659,7 +740,7 @@ if __name__ == "__main__":
     print(f"Server: http://0.0.0.0:8000")
     print(f"API Docs: http://0.0.0.0:8000/docs")
     print("=" * 80)
-    
+
     uvicorn.run(
         "server:app",
         host="0.0.0.0",

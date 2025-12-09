@@ -21,7 +21,6 @@ class ZeekConnParser(BaseParser):
         self.output_dir = output_dir
         Path(output_dir).mkdir(parents=True, exist_ok=True)
 
-        # Regex pattern mapping the conn.log fields (space or tab separated)
         self.conn_pattern = re.compile(
             r"(?P<ts>\d+\.\d+)\s+"
             r"(?P<uid>\S+)\s+"
