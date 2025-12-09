@@ -183,8 +183,16 @@ class AlertDetailsManager {
             if (res.ok) {
                 const data = await res.json();
 
+                // Decode Base64 to Binary
+                const binaryString = window.atob(data.encrypted_data);
+                const len = binaryString.length;
+                const bytes = new Uint8Array(len);
+                for (let i = 0; i < len; i++) {
+                    bytes[i] = binaryString.charCodeAt(i);
+                }
+
                 // Download Encrypted File
-                const blob = new Blob([data.encrypted_data], { type: 'application/octet-stream' });
+                const blob = new Blob([bytes], { type: 'application/octet-stream' });
                 const url = window.URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
@@ -195,7 +203,6 @@ class AlertDetailsManager {
                 a.remove();
 
                 // Show Key in a prompt/alert so user can copy it
-                // Ideally, we'd use a nice modal, but for now a prompt is functional
                 prompt("Encryption Key (Copy and save this securely!):", data.key);
 
             } else {
